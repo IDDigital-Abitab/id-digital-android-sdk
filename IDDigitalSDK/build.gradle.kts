@@ -46,21 +46,23 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    implementation("androidx.compose.material3:material3:1.1.1") // Material3
-    implementation("com.amplifyframework.ui:liveness:1.2.0") // Amplify Liveness
-    implementation("com.amplifyframework:aws-auth-cognito:2.14.6") // AWS Auth Cognito
-    implementation("androidx.compose.material3:material3:1.1.1") // Material3
+    implementation(libs.androidx.material3)
+    implementation(libs.liveness)
+    implementation(libs.aws.auth.cognito)
+    implementation(libs.androidx.material3.v111)
 
-    implementation("androidx.compose.ui:ui:1.4.0")
-    implementation("androidx.compose.material3:material3:1.1.1")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.4.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
-    implementation("androidx.activity:activity-compose:1.7.0")
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material3)
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
 
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.airbnb.android:lottie:3.4.0")
+    implementation(libs.okhttp)
+    implementation(libs.lottie.compose)
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

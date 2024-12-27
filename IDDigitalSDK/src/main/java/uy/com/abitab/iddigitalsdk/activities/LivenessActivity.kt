@@ -10,16 +10,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
 import com.amplifyframework.ui.liveness.ui.LivenessColorScheme
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +35,9 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.composables.InstructionsScreen
 import java.io.IOException
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 
 class LivenessActivity : ComponentActivity() {
@@ -62,11 +68,19 @@ class LivenessActivity : ComponentActivity() {
                     onBack = { finish() }
                 )
             } else {
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
+
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Cargando...", fontSize = 18.sp)
+                    LottieAnimation(
+                        composition,
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(50.dp),
+                        iterations = LottieConstants.IterateForever
+                    )
                 }
             }
         }
@@ -75,7 +89,7 @@ class LivenessActivity : ComponentActivity() {
     private fun configureSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        window.statusBarColor = android.graphics.Color.WHITE
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = WindowInsetsControllerCompat(window, window.decorView)
