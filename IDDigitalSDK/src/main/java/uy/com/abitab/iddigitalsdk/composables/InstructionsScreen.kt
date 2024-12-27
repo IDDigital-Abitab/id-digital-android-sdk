@@ -84,7 +84,6 @@ fun InstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
                     .padding(
                         PaddingValues(
                             top = innerPadding.calculateTopPadding(),
-
                             bottom = 0.dp,
                         )
                     )

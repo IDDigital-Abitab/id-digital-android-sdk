@@ -6,12 +6,21 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -34,15 +44,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import uy.com.abitab.iddigitalsdk.BuildConfig
+import uy.com.abitab.iddigitalsdk.Document
 import uy.com.abitab.iddigitalsdk.R
+import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
 import uy.com.abitab.iddigitalsdk.composables.InstructionsScreen
+import uy.com.abitab.iddigitalsdk.network.LivenessService
 import java.io.IOException
 
 
 class LivenessActivity : ComponentActivity() {
 
-    private val httpClient = OkHttpClient()
+    private lateinit var livenessService: LivenessService
     private var accessToken: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,10 +66,18 @@ class LivenessActivity : ComponentActivity() {
         configureSystemUI()
 
         accessToken = intent.getStringExtra(EXTRA_ACCESS_TOKEN)
-        if (accessToken == null) {
+        val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
+        }
+
+        if (accessToken == null || document == null) {
             finish()
             return
         }
+        livenessService = LivenessService(accessToken!!)
 
         setContent {
             var showInstructions by remember { mutableStateOf(true) }
@@ -63,7 +86,7 @@ class LivenessActivity : ComponentActivity() {
                 InstructionsScreen(
                     onStart = {
                         showInstructions = false
-                        startLivenessFlow()
+                        startLivenessFlow(document)
                     },
                     onBack = { finish() }
                 )
@@ -102,64 +125,74 @@ class LivenessActivity : ComponentActivity() {
         }
     }
 
-    private fun startLivenessFlow() {
+    private fun startLivenessFlow(document: Document) {
         lifecycleScope.launch {
             try {
-                val sessionId = fetchSessionID(
-                    "http://192.168.1.11:3000/liveness-challenge",
-                    accessToken!!
-                )
+                val challengeId = livenessService.createChallenge(document)
+                Log.d("LivenessActivity", "Challenge ID obtenido: $challengeId")
+                val sessionId = livenessService.executeChallenge(challengeId)
                 Log.d("LivenessActivity", "Session ID obtenido: $sessionId")
 
                 setContent {
-                    MaterialTheme(
-                        colorScheme = LivenessColorScheme.default()
-                    ) {
-                        FaceLivenessDetector(
-                            sessionId = sessionId,
-                            region = "us-east-1",
-                            disableStartView = true,
-                            onComplete = { finish() },
-                            onError = { error ->
-                                Log.e("LivenessActivity", "Error en liveness: ${error.message}")
-                                Log.e("LivenessActivity", error.throwable.toString())
-                                finish()
-                            }
-                        )
+                    AbitabTheme {
+                        Box(
+                            modifier = Modifier
+                                .background(Color.Black)
+                                .windowInsetsPadding(WindowInsets.safeDrawing)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            FaceLivenessDetector(
+                                sessionId = sessionId,
+                                region = "us-east-1",
+                                disableStartView = true,
+                                onComplete = {
+                                    lifecycleScope.launch {
+                                        livenessService.validateChallenge(challengeId)
+                                        finish()
+                                    }
+                                    setContent {
+                                        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
+
+                                        Box(
+                                            Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            LottieAnimation(
+                                                composition,
+                                                modifier = Modifier
+                                                    .width(50.dp)
+                                                    .height(50.dp),
+                                                iterations = LottieConstants.IterateForever
+                                            )
+                                        }
+                                    }
+                                },
+                                onError = { error ->
+                                    Log.e("LivenessActivity", "Error en liveness: ${error.message}")
+                                    Log.e("LivenessActivity", error.throwable.toString())
+                                    finish()
+                                }
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("LivenessActivity", "Error al obtener el session ID: ${e.message}")
+                Log.e("LivenessActivity", "Error en startLivenessFlow: ${e.message}")
                 finish()
             }
         }
     }
 
-    private suspend fun fetchSessionID(url: String, accessToken: String): String =
-        withContext(Dispatchers.IO) {
-            val request = Request.Builder()
-                .url(url)
-                .header("Authorization", "Bearer $accessToken")
-                .build()
-
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    throw IOException("Error en la solicitud: ${response.code}")
-                }
-                val responseBody = response.body?.string()
-                    ?: throw IOException("Cuerpo de la respuesta vacío")
-
-                val json = JSONObject(responseBody)
-                return@withContext json.getString("sessionId")
-            }
-        }
 
     companion object {
         private const val EXTRA_ACCESS_TOKEN = "EXTRA_ACCESS_TOKEN"
+        private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
 
-        fun createIntent(context: Context, accessToken: String): Intent {
+        fun createIntent(context: Context, accessToken: String, document: Document): Intent {
             return Intent(context, LivenessActivity::class.java).apply {
                 putExtra(EXTRA_ACCESS_TOKEN, accessToken)
+                putExtra(EXTRA_DOCUMENT, document)
             }
         }
     }

@@ -7,6 +7,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import uy.com.abitab.iddigitalsdk.activities.LivenessActivity
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
+import java.io.Serializable
 
 class IDDigitalSDK private constructor() {
 
@@ -38,14 +39,20 @@ class IDDigitalSDK private constructor() {
         }
     }
 
-    fun startLiveness(context: Context) {
+    fun startLiveness(context: Context, document: Document) {
         if (!PermissionsManager.hasCameraPermission(context)) {
             Log.d("IDDigitalSDK", "Solicitando permiso de cámara...")
             cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
             return
         }
 
-        val intent = LivenessActivity.createIntent(context, accessToken)
+        val intent = LivenessActivity.createIntent(context, accessToken, document)
         context.startActivity(intent)
     }
 }
+
+data class Document(
+    val number: String,
+    val type: String? = null,
+    val country: String? = null
+): Serializable

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import uy.com.abitab.iddigitalsdk.Document
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +31,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startLiveness() {
-        IDDigitalSDK.getInstance().startLiveness(this)
+        val document = Document(
+            number = "45743055"
+        )
+        IDDigitalSDK.getInstance().startLiveness(this, document)
     }
 }
 
