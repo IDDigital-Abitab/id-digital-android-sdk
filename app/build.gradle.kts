@@ -59,4 +59,16 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.4.0")             // Verifica la versión
     implementation("androidx.compose.material3:material3:1.0.0")
     implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
+
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+
+    implementation(libs.material)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material3)
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose)
 }

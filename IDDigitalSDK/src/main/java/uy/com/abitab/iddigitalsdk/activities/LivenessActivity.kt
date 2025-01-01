@@ -4,24 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,27 +33,33 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
-import com.amplifyframework.ui.liveness.ui.LivenessColorScheme
-import kotlinx.coroutines.Dispatchers
+import com.google.gson.Gson
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.BuildConfig
+import uy.com.abitab.iddigitalsdk.CallbackHandler
 import uy.com.abitab.iddigitalsdk.Document
+import uy.com.abitab.iddigitalsdk.GENERIC_ERROR_MESSAGE
+import uy.com.abitab.iddigitalsdk.IDDigitalError
+import uy.com.abitab.iddigitalsdk.PermissionsManager
+import uy.com.abitab.iddigitalsdk.PermissionsManager.registerPermissionLauncher
 import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
 import uy.com.abitab.iddigitalsdk.composables.InstructionsScreen
+import uy.com.abitab.iddigitalsdk.composables.PostLivenessProcessing
 import uy.com.abitab.iddigitalsdk.network.LivenessService
 import java.io.IOException
 
 
 class LivenessActivity : ComponentActivity() {
-
     private lateinit var livenessService: LivenessService
     private var accessToken: String? = null
+
+    private val permissionResultChannel = Channel<Boolean>(Channel.CONFLATED)
+
+
+    inline fun <reified T> Gson.fromJson(json: String?): T? {
+        return fromJson(json, T::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,36 +67,38 @@ class LivenessActivity : ComponentActivity() {
         configureSystemUI()
 
         accessToken = intent.getStringExtra(EXTRA_ACCESS_TOKEN)
+
         val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
         } else {
-            @Suppress("DEPRECATION")
-            intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
+            @Suppress("DEPRECATION") intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
         }
 
         if (accessToken == null || document == null) {
+            CallbackHandler.onError(IDDigitalError.WrongDataError(
+                "No se ingresó un documento, o el mismo no es válido.",
+                null
+            ))
             finish()
             return
         }
         livenessService = LivenessService(accessToken!!)
 
+        registerPermissionLauncher(this)
+
         setContent {
             var showInstructions by remember { mutableStateOf(true) }
 
             if (showInstructions) {
-                InstructionsScreen(
-                    onStart = {
-                        showInstructions = false
-                        startLivenessFlow(document)
-                    },
-                    onBack = { finish() }
-                )
+                InstructionsScreen(onStart = {
+                    showInstructions = false
+                    startLivenessFlow(document)
+                }, onBack = { finish() })
             } else {
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
 
                 Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                 ) {
                     LottieAnimation(
                         composition,
@@ -111,27 +114,47 @@ class LivenessActivity : ComponentActivity() {
 
     private fun configureSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
+
+        enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = WindowInsetsControllerCompat(window, window.decorView)
             controller.isAppearanceLightStatusBars = true
+
         } else {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
         }
     }
 
     private fun startLivenessFlow(document: Document) {
         lifecycleScope.launch {
+            if (!PermissionsManager.hasCameraPermission(this@LivenessActivity)) {
+
+                launch {
+                    val isGranted =
+                        PermissionsManager.requestCameraPermission(this@LivenessActivity)
+                    permissionResultChannel.send(isGranted)
+                }
+
+                val isGranted = permissionResultChannel.receive()
+                if (!isGranted) {
+                    CallbackHandler.onError(
+                        IDDigitalError.CameraPermissionError(
+                            "Permiso de cámara denegado.",
+                            null
+                        )
+                    )
+                    finish()
+                    return@launch
+                }
+            }
+
             try {
                 val challengeId = livenessService.createChallenge(document)
-                Log.d("LivenessActivity", "Challenge ID obtenido: $challengeId")
                 val sessionId = livenessService.executeChallenge(challengeId)
-                Log.d("LivenessActivity", "Session ID obtenido: $sessionId")
+
 
                 setContent {
                     AbitabTheme {
@@ -142,54 +165,61 @@ class LivenessActivity : ComponentActivity() {
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center,
                         ) {
-                            FaceLivenessDetector(
-                                sessionId = sessionId,
+                            FaceLivenessDetector(sessionId = sessionId,
                                 region = "us-east-1",
                                 disableStartView = true,
                                 onComplete = {
                                     lifecycleScope.launch {
-                                        livenessService.validateChallenge(challengeId)
+
+                                        if (challengeId != null) {
+                                            livenessService.validateChallenge(challengeId)
+                                            CallbackHandler.onCompleted(challengeId)
+                                        }
                                         finish()
                                     }
                                     setContent {
-                                        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading))
-
-                                        Box(
-                                            Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            LottieAnimation(
-                                                composition,
-                                                modifier = Modifier
-                                                    .width(50.dp)
-                                                    .height(50.dp),
-                                                iterations = LottieConstants.IterateForever
-                                            )
-                                        }
+                                        PostLivenessProcessing()
                                     }
                                 },
                                 onError = { error ->
-                                    Log.e("LivenessActivity", "Error en liveness: ${error.message}")
-                                    Log.e("LivenessActivity", error.throwable.toString())
+                                    CallbackHandler.onError(
+                                        IDDigitalError.UnknownError(
+                                            GENERIC_ERROR_MESSAGE,
+                                            error.throwable
+                                        )
+                                    )
                                     finish()
-                                }
-                            )
+                                })
                         }
                     }
                 }
+            } catch (e: IOException) {
+                CallbackHandler.onError(
+                    IDDigitalError.NetworkError(
+                        "Ha ocurrido un error de red. Por favor, intenta nuevamente.",
+                        e
+                    )
+                )
+                finish()
             } catch (e: Exception) {
-                Log.e("LivenessActivity", "Error en startLivenessFlow: ${e.message}")
+                CallbackHandler.onError(
+                    IDDigitalError.UnknownError(GENERIC_ERROR_MESSAGE)
+                )
                 finish()
             }
         }
     }
 
-
     companion object {
         private const val EXTRA_ACCESS_TOKEN = "EXTRA_ACCESS_TOKEN"
         private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
 
-        fun createIntent(context: Context, accessToken: String, document: Document): Intent {
+        fun createIntent(
+            context: Context,
+            accessToken: String,
+            document: Document,
+
+        ): Intent {
             return Intent(context, LivenessActivity::class.java).apply {
                 putExtra(EXTRA_ACCESS_TOKEN, accessToken)
                 putExtra(EXTRA_DOCUMENT, document)

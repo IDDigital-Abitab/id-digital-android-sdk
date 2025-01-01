@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "uy.com.abitab.iddigitalsdk"
-    compileSdk = 34
+    compileSdk = 35
 
 
     defaultConfig {
@@ -14,7 +14,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.11:8000/api/v2/sdk\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000/api/v2/sdk\"")
     }
 
     buildTypes {
@@ -59,13 +59,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.animation)
+
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.okhttp)
     implementation(libs.lottie.compose)
-
-
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

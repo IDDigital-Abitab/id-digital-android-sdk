@@ -3,16 +3,28 @@ package uy.com.abitab.iddigitalsdk
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CompletableDeferred
 
 object PermissionsManager {
 
     const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 
-    /**
-     * Verifica si el permiso de cámara ha sido concedido.
-     */
+    private lateinit var cameraPermissionLauncher: ActivityResultLauncher<String>
+    private var permissionDeferred: CompletableDeferred<Boolean>? = null
+
+    fun registerPermissionLauncher(activity: ComponentActivity) {
+        cameraPermissionLauncher = activity.registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            permissionDeferred?.complete(isGranted)
+            permissionDeferred = null
+        }
+    }
+
     fun hasCameraPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -20,12 +32,10 @@ object PermissionsManager {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Solicita el permiso de cámara usando un launcher de permisos.
-     */
-    fun requestCameraPermission(
-        launcher: ActivityResultLauncher<String>
-    ) {
-        launcher.launch(CAMERA_PERMISSION)
+    suspend fun requestCameraPermission(context: Context): Boolean {
+        val deferred = CompletableDeferred<Boolean>()
+        permissionDeferred = deferred
+        cameraPermissionLauncher.launch(CAMERA_PERMISSION)
+        return deferred.await()
     }
 }

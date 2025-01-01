@@ -40,8 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.composables.components.Button
+import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 
 
 @Preview(showBackground = true)
@@ -57,26 +59,28 @@ fun InstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     AbitabTheme {
-        Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = MaterialTheme.colorScheme.primary
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = MaterialTheme.colorScheme.primary
 
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    scrolledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        scrolledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    )
                 )
-            )
-        }) { innerPadding ->
+            }) { innerPadding ->
 
             Column(
                 modifier = Modifier
@@ -89,8 +93,6 @@ fun InstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
                     )
                     .background(Color.White)
                     .padding(horizontal = 24.dp)
-
-
             ) {
 
 
@@ -143,25 +145,14 @@ fun InstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
                         )
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally),
-                ) {
-                    Text(
-                        "Powered by", style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.id_digital),
-                        contentDescription = "ID Digital",
-                    )
-                }
+
+                IDDigitalWatermark()
 
                 Spacer(modifier = Modifier.height(innerPadding.calculateBottomPadding()))
             }
         }
     }
+
 }
 
 
