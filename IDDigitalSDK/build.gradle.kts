@@ -1,6 +1,20 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    `maven-publish`
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "uy.com.abitab"
+                artifactId = "iddigitalsdk"
+                version = "0.0.1"
+            }
+        }
+    }
 }
 
 android {
