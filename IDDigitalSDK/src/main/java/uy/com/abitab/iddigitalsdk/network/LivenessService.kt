@@ -18,7 +18,7 @@ class LivenessService(private val accessToken: String) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private fun buildUrl(path: String): String {
-        val baseUrl = BuildConfig.API_BASE_URL.trimEnd('/')
+        val baseUrl = BuildConfig.ID_DIGITAL_BASE_URL.trimEnd('/')
         return "$baseUrl/$path"
     }
 

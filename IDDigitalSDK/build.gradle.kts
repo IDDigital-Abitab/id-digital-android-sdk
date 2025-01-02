@@ -14,7 +14,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000/api/v2/sdk\"")
+        buildConfigField("String", "ID_DIGITAL_BASE_URL", "\"http://localhost:8000/api/v2/sdk\"")
     }
 
     buildTypes {

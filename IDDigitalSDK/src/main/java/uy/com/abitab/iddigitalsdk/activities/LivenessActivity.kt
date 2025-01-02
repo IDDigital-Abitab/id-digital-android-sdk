@@ -32,6 +32,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.amplifyframework.ui.liveness.model.FaceLivenessDetectionException
 import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
 import com.google.gson.Gson
 import kotlinx.coroutines.channels.Channel
@@ -75,10 +76,12 @@ class LivenessActivity : ComponentActivity() {
         }
 
         if (accessToken == null || document == null) {
-            CallbackHandler.onError(IDDigitalError.WrongDataError(
-                "No se ingresó un documento, o el mismo no es válido.",
-                null
-            ))
+            CallbackHandler.onError(
+                IDDigitalError.WrongDataError(
+                    "No se ingresó un documento, o el mismo no es válido.",
+                    null
+                )
+            )
             finish()
             return
         }
@@ -170,11 +173,8 @@ class LivenessActivity : ComponentActivity() {
                                 disableStartView = true,
                                 onComplete = {
                                     lifecycleScope.launch {
-
-                                        if (challengeId != null) {
-                                            livenessService.validateChallenge(challengeId)
-                                            CallbackHandler.onCompleted(challengeId)
-                                        }
+                                        livenessService.validateChallenge(challengeId)
+                                        CallbackHandler.onCompleted(challengeId)
                                         finish()
                                     }
                                     setContent {
@@ -182,12 +182,29 @@ class LivenessActivity : ComponentActivity() {
                                     }
                                 },
                                 onError = { error ->
-                                    CallbackHandler.onError(
-                                        IDDigitalError.UnknownError(
-                                            GENERIC_ERROR_MESSAGE,
-                                            error.throwable
+                                    when (error) {
+                                        is FaceLivenessDetectionException.UserCancelledException ->
+                                            CallbackHandler.onError(
+                                                IDDigitalError.UserCancelledError(
+                                                    "El usuario canceló la validación",
+                                                )
+                                            )
+
+                                        is FaceLivenessDetectionException.CameraPermissionDeniedException ->
+                                            CallbackHandler.onError(
+                                                IDDigitalError.CameraPermissionError(
+                                                    "Permiso de cámara denegado.",
+                                                    error.throwable
+                                                )
+                                            )
+
+                                        else -> CallbackHandler.onError(
+                                            IDDigitalError.UnknownError(
+                                                GENERIC_ERROR_MESSAGE,
+                                                error.throwable
+                                            )
                                         )
-                                    )
+                                    }
                                     finish()
                                 })
                         }
@@ -219,7 +236,7 @@ class LivenessActivity : ComponentActivity() {
             accessToken: String,
             document: Document,
 
-        ): Intent {
+            ): Intent {
             return Intent(context, LivenessActivity::class.java).apply {
                 putExtra(EXTRA_ACCESS_TOKEN, accessToken)
                 putExtra(EXTRA_DOCUMENT, document)

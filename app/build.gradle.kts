@@ -15,6 +15,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_BASE_URL", "\"http://localhost:3000\"")
+        buildConfigField("String", "API_KEY", "\"FwE93jFEj0_Uxawc10EX5q3mxkQlnMkGKMxeAR1-3Ls\"")
     }
 
     buildTypes {
@@ -36,6 +39,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"

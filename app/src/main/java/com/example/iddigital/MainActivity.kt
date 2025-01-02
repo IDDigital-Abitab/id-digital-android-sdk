@@ -4,6 +4,7 @@ import TransferDetailsScreen
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -25,8 +26,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.Document
+import uy.com.abitab.iddigitalsdk.IDDigitalError
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 import uy.com.abitab.iddigitalsdk.composables.AppTheme
 import java.io.IOException
@@ -39,7 +40,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        IDDigitalSDK.getInstance().initialize(this, "FwE93jFEj0_Uxawc10EX5q3mxkQlnMkGKMxeAR1-3Ls")
+        val apiKey = BuildConfig.API_KEY
+        IDDigitalSDK.getInstance().initialize(this, apiKey)
 
         setContent {
             MainScreen(onStartLivenessClick = {
@@ -54,13 +56,27 @@ class MainActivity : ComponentActivity() {
         )
 
         IDDigitalSDK.getInstance().startLiveness(this, document, onError = { error ->
-            Log.e("MainActivity", "Error message: ${error.message}")
-            Log.e("MainActivity", "Error: $error")
+            when(error) {
+                is IDDigitalError.NetworkError -> {
+                    Toast.makeText(this, "Ha ocurrido un error de conexión", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.CameraPermissionError -> {
+                    Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.UnknownError -> {
+                    Toast.makeText(this, "Error desconocido", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.UserCancelledError -> {
+                    Toast.makeText(this, "Has cancelado la validación, vuelve a intentarlo", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.WrongDataError -> {
+                    Toast.makeText(this, "Datos incorrectos", Toast.LENGTH_SHORT).show()
+                }
+            }
         }, onCompleted = { challengeId ->
             setContent {
                 ProcessingScreen()
             }
-            Log.d("MainActivity", "Challenge completed: $challengeId")
             lifecycleScope.launch {
                 val result = getChallengeResult(challengeId)
                 withContext(Dispatchers.Main) {
@@ -68,11 +84,19 @@ class MainActivity : ComponentActivity() {
                         AppTheme {
                             if (result == ChallengeResult.SUCCESS) {
                                 SuccessScreen(onRetry = {
-                                    startLiveness()
+                                    setContent {
+                                        MainScreen(onStartLivenessClick = {
+                                            startLiveness()
+                                        })
+                                    }
                                 })
                             } else {
                                 ErrorScreen(onRetry = {
-                                    startLiveness()
+                                    setContent {
+                                        MainScreen(onStartLivenessClick = {
+                                            startLiveness()
+                                        })
+                                    }
                                 })
                             }
                         }
@@ -90,8 +114,10 @@ class MainActivity : ComponentActivity() {
     private suspend fun getChallengeResult(challengeId: String): ChallengeResult {
         return withContext(Dispatchers.IO) {
             delay(2000)
+            val baseUrl = BuildConfig.API_BASE_URL.trimEnd('/')
+
             val request = Request.Builder()
-                .url("http://localhost:3000/get-challenge-result/$challengeId")
+                .url("$baseUrl/get-challenge-result/$challengeId")
                 .build()
 
             try {
@@ -110,8 +136,7 @@ class MainActivity : ComponentActivity() {
                     }
                     return@withContext ChallengeResult.FAILED
                 }
-            }
-            catch (e: IOException) {
+            } catch (e: IOException) {
                 Log.e("MainActivity", "Error: $e")
                 return@withContext ChallengeResult.FAILED
             }

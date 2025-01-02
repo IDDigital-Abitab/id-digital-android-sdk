@@ -8,7 +8,7 @@ import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import java.io.Serializable
 
 class IDDigitalSDK private constructor() {
-    private lateinit var accessToken: String
+    private lateinit var apiKey: String
 
     companion object {
         private var instance: IDDigitalSDK? = null
@@ -21,8 +21,8 @@ class IDDigitalSDK private constructor() {
         }
     }
 
-    fun initialize(context: ComponentActivity, accessToken: String) {
-        this.accessToken = accessToken
+    fun initialize(context: ComponentActivity, apiKey: String) {
+        this.apiKey = apiKey
         AmplifyInitializer.initialize(context)
         registerPermissionLauncher(context)
     }
@@ -31,7 +31,7 @@ class IDDigitalSDK private constructor() {
         CallbackHandler.setOnErrorHandler(onError)
         CallbackHandler.setOnCompletedHandler(onCompleted)
 
-        val intent = LivenessActivity.createIntent(context, accessToken, document)
+        val intent = LivenessActivity.createIntent(context, apiKey, document)
         context.startActivity(intent)
     }
 }
@@ -51,6 +51,7 @@ sealed class IDDigitalError(open val message: String, open val exception: Throwa
     data class NetworkError(override val message: String, override val exception: Throwable? = null) : IDDigitalError(message, exception)
     data class CameraPermissionError(override val message: String, override val exception: Throwable? = null) : IDDigitalError(message, exception)
     data class WrongDataError(override val message: String, override val exception: Throwable? = null) : IDDigitalError(message, exception)
+    data class UserCancelledError(override val message: String, override val exception: Throwable? = null) : IDDigitalError(message, exception)
 }
 
 object CallbackHandler {
