@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.animation)
+    implementation(libs.androidx.activity.ktx)
 
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)

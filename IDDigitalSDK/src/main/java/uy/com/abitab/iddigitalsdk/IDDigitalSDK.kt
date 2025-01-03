@@ -1,7 +1,6 @@
 package uy.com.abitab.iddigitalsdk
 
 import android.content.Context
-import androidx.activity.ComponentActivity
 import uy.com.abitab.iddigitalsdk.PermissionsManager.registerPermissionLauncher
 import uy.com.abitab.iddigitalsdk.activities.LivenessActivity
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
@@ -21,7 +20,7 @@ class IDDigitalSDK private constructor() {
         }
     }
 
-    fun initialize(context: ComponentActivity, apiKey: String) {
+    fun initialize(context: Context, apiKey: String) {
         this.apiKey = apiKey
         AmplifyInitializer.initialize(context)
         registerPermissionLauncher(context)
