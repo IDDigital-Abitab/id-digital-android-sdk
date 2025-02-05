@@ -22,16 +22,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.Document
+import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.IDDigitalError
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 import uy.com.abitab.iddigitalsdk.composables.AppTheme
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -166,7 +164,6 @@ fun MainScreen(onStartLivenessClick: () -> Unit) {
                 title = { Text("Aprobar transacción", color = Color.White) },
                 navigationIcon = {},
                 actions = {},
-                modifier = Modifier.background(Color(0xFF6200EE))
             )
         }) {
             TransferDetailsScreen(

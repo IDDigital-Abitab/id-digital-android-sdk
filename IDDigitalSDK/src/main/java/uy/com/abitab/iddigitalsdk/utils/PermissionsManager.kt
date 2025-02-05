@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk
+package uy.com.abitab.iddigitalsdk.utils
 
 import android.Manifest
 import android.content.Context

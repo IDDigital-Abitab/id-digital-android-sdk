@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk.network
+package uy.com.abitab.iddigitalsdk.data.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -9,7 +9,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.BuildConfig
-import uy.com.abitab.iddigitalsdk.Document
+import uy.com.abitab.iddigitalsdk.domain.models.Document
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 

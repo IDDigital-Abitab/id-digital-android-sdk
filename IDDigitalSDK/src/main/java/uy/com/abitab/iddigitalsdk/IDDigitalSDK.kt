@@ -1,13 +1,15 @@
 package uy.com.abitab.iddigitalsdk
 
 import android.content.Context
-import uy.com.abitab.iddigitalsdk.PermissionsManager.registerPermissionLauncher
-import uy.com.abitab.iddigitalsdk.activities.LivenessActivity
+import android.util.Log
+import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
+import uy.com.abitab.iddigitalsdk.presentation.ui.activities.LivenessActivity
+import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import java.io.Serializable
 
 class IDDigitalSDK private constructor() {
-    private lateinit var apiKey: String
+    lateinit var apiKey: String
 
     companion object {
         private var instance: IDDigitalSDK? = null
@@ -19,6 +21,8 @@ class IDDigitalSDK private constructor() {
             return instance!!
         }
     }
+
+
 
     fun initialize(context: Context, apiKey: String) {
         this.apiKey = apiKey
@@ -35,12 +39,6 @@ class IDDigitalSDK private constructor() {
     }
 }
 
-
-data class Document(
-    val number: String,
-    val type: String? = null,
-    val country: String? = null
-) : Serializable
 
 const val GENERIC_ERROR_MESSAGE = "Ha ocurrido un error"
 
