@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk.internal
+package uy.com.abitab.iddigitalsdk.di
 
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -17,18 +17,16 @@ import uy.com.abitab.iddigitalsdk.utils.PermissionsManager
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManagerInterface
 import java.util.concurrent.TimeUnit
 
-internal val sdkModule = module {
-    single { IDDigitalSDK.getInstance() }
+internal fun sdkModule() = module {
 
     single<PermissionsManagerInterface> { PermissionsManager }
     single<AmplifyInitializerInterface> { AmplifyInitializer }
 
     single {
-        val accessToken = get<IDDigitalSDK>().apiKey
         OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
-                    .header("Authorization", "Api-Key $accessToken")
+                    .header("Authorization", "Api-Key ${IDDigitalSDK.getApiKey()}")
                     .build()
                 chain.proceed(request)
             }

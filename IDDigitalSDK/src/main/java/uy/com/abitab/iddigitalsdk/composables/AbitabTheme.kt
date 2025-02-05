@@ -38,33 +38,33 @@ fun AbitabTheme(content: @Composable () -> Unit) {
         colorScheme = ColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
-            primaryContainer = primaryColor, // Color used for containers with primary content
+            primaryContainer = primaryColor,
             onPrimaryContainer = Color.White,
-            inversePrimary = primaryColor, // Color for primary elements on inverse surfaces
+            inversePrimary = primaryColor,
             secondary = secondaryColor,
             onSecondary = Color.White,
-            secondaryContainer = secondaryColor, // Color used for containers with secondary content
+            secondaryContainer = secondaryColor,
             onSecondaryContainer = Color.White,
             tertiary = Color(0xFFD9E3EB),
             onTertiary = Color(0xFF00437A),
-            tertiaryContainer = Color(0xFFD9E3EB), // Color used for containers with tertiary content
+            tertiaryContainer = Color(0xFFD9E3EB),
             onTertiaryContainer = Color(0xFF00437A),
             background = Color.White,
             onBackground = Color.Black,
             surface = Color.White,
             onSurface = Color.Black,
-            surfaceVariant = Color.LightGray, // A slightly different surface color for variation
+            surfaceVariant = Color.LightGray,
             onSurfaceVariant = Color.Black,
-            surfaceTint = primaryColor, // A tint color applied to surfaces
-            inverseSurface = Color.DarkGray, // Color for inverse surfaces
-            inverseOnSurface = Color.Black, // Color for text on inverse surfaces
+            surfaceTint = primaryColor,
+            inverseSurface = Color.DarkGray,
+            inverseOnSurface = Color.Black,
             error = Color.Red,
             onError = Color.White,
-            errorContainer = Color.Red, // Color used for containers with error content
+            errorContainer = Color.Red,
             onErrorContainer = Color.White,
-            outline = Color.Gray, // Color for outlines and dividers
-            outlineVariant = Color.Gray, // A variant color for outlines and dividers
-            scrim = Color.Black.copy(alpha = 0.5f), // A semi-transparent overlay color
+            outline = Color.Gray,
+            outlineVariant = Color.Gray,
+            scrim = Color.Black.copy(alpha = 0.5f),
         ),
         typography = typography,
         content = content,

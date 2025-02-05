@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.composables.components.Button
 import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
@@ -48,14 +47,14 @@ import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 
 @Preview(showBackground = true)
 @Composable
-fun IntructionsScreenPreview() {
-    InstructionsScreen({}, {})
+fun LivenessIntructionsScreenPreview() {
+    LivenessInstructionsScreen({}, {})
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
+fun LivenessInstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     AbitabTheme {

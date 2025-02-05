@@ -34,12 +34,13 @@ import java.io.IOException
 class MainActivity : ComponentActivity() {
 
     private val httpClient = OkHttpClient.Builder().build()
+    private lateinit var sdkInstance: IDDigitalSDK
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val apiKey = BuildConfig.API_KEY
-        IDDigitalSDK.getInstance().initialize(this, apiKey)
+        sdkInstance = IDDigitalSDK.initialize(this, apiKey)
 
         setContent {
             MainScreen(onStartLivenessClick = {
@@ -53,7 +54,7 @@ class MainActivity : ComponentActivity() {
             number = "45743055"
         )
 
-        IDDigitalSDK.getInstance().startLiveness(this, document, onError = { error ->
+        sdkInstance.startLiveness(this, document, onError = { error ->
             when(error) {
                 is IDDigitalError.NetworkError -> {
                     Toast.makeText(this, "Ha ocurrido un error de conexión", Toast.LENGTH_SHORT).show()

@@ -59,7 +59,8 @@ class LivenessViewModel(
                 createLivenessChallengeUseCase(document)
             } catch (e: Exception) {
                 Log.e("LivenessViewModel", "Error al crear el challenge", e)
-                _uiState.value = LivenessUiState.Error(IDDigitalError.UnknownError("Error al crear el challenge: ${e.message}"))
+                _uiState.value =
+                    LivenessUiState.Error(IDDigitalError.UnknownError("Error al crear el challenge: ${e.message}"))
                 return@launch
             }
 
@@ -68,7 +69,8 @@ class LivenessViewModel(
                 executeLivenessChallengeUseCase(challengeId)
             } catch (e: Exception) {
                 Log.e("LivenessViewModel", "Error al ejecutar el challenge", e)
-                _uiState.value = LivenessUiState.Error(IDDigitalError.UnknownError("Error al ejecutar el challenge: ${e.message}"))
+                _uiState.value =
+                    LivenessUiState.Error(IDDigitalError.UnknownError("Error al ejecutar el challenge: ${e.message}"))
                 return@launch
             }
 
@@ -76,17 +78,18 @@ class LivenessViewModel(
             _uiState.value = LivenessUiState.Success(challengeId)
         }
     }
+
     fun onPermissionResult(isGranted: Boolean) {
         viewModelScope.launch {
+            if (!cameraPermissionRequested) return@launch
+            cameraPermissionRequested = false
             if (!isGranted) {
                 Log.e("LivenessViewModel", "Permiso de cámara denegado")
-                _uiState.value = LivenessUiState.Error(IDDigitalError.CameraPermissionError("Permiso de cámara denegado."))
+                _uiState.value =
+                    LivenessUiState.Error(IDDigitalError.CameraPermissionError("Permiso de cámara denegado."))
                 return@launch
             }
-            if (cameraPermissionRequested) {
-                createChallenge(document)
-                cameraPermissionRequested = false
-            }
+            createChallenge(document)
         }
     }
 }

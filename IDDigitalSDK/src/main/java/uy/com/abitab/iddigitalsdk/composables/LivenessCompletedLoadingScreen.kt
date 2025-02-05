@@ -32,7 +32,7 @@ import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun PostLivenessProcessing() {
+fun LivenessCompletedLoadingScreen() {
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.loading)
     )
