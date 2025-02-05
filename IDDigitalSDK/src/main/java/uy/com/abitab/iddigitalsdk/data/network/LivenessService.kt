@@ -11,28 +11,14 @@ import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
-class LivenessService(private val accessToken: String) {
-
+class LivenessService(private val httpClient: OkHttpClient) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private fun buildUrl(path: String): String {
         val baseUrl = BuildConfig.ID_DIGITAL_BASE_URL.trimEnd('/')
         return "$baseUrl/$path"
     }
-
-    private val httpClient = OkHttpClient.Builder()
-        .addInterceptor { chain ->
-            val request = chain.request().newBuilder()
-                .header("Authorization", "Api-Key $accessToken")
-                .build()
-            chain.proceed(request)
-        }
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
 
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {

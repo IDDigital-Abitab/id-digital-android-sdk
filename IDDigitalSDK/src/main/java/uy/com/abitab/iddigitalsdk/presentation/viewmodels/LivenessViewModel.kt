@@ -14,12 +14,13 @@ import uy.com.abitab.iddigitalsdk.IDDigitalError
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
-import uy.com.abitab.iddigitalsdk.utils.PermissionsManager
+import uy.com.abitab.iddigitalsdk.utils.PermissionsManagerInterface
 
 class LivenessViewModel(
     private val createLivenessChallengeUseCase: CreateLivenessChallengeUseCase,
     private val executeLivenessChallengeUseCase: ExecuteLivenessChallengeUseCase,
-    application: Application
+    application: Application,
+    private val permissionsManager: PermissionsManagerInterface
 ) : AndroidViewModel(application) {
 
     private val _permissionResultChannel = Channel<Boolean>()
@@ -40,10 +41,10 @@ class LivenessViewModel(
             _uiState.value = LivenessUiState.Loading
             val context = getApplication<Application>().applicationContext
 
-            if (!PermissionsManager.hasCameraPermission(context)) {
+            if (!permissionsManager.hasCameraPermission(context)) {
                 Log.d("LivenessViewModel", "Solicitando permiso de cámara")
                 cameraPermissionRequested = true
-                val isGranted = PermissionsManager.requestCameraPermission(context)
+                val isGranted = permissionsManager.requestCameraPermission(context)
                 _permissionResultChannel.send(isGranted)
                 return@launch
             }

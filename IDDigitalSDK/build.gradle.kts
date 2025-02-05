@@ -2,13 +2,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     `maven-publish`
-
-}
-
-buildscript {
-    dependencies {
-        classpath("com.google.dagger:hilt-android-gradle-plugin:2.55")
-    }
 }
 
 afterEvaluate {
@@ -83,12 +76,14 @@ dependencies {
     implementation(libs.androidx.animation)
     implementation(libs.androidx.activity.ktx)
 
-
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.okhttp)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -2,9 +2,12 @@ package uy.com.abitab.iddigitalsdk
 
 import android.content.Context
 import android.util.Log
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.startKoin
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
 import uy.com.abitab.iddigitalsdk.presentation.ui.activities.LivenessActivity
 import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.internal.sdkModule
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import java.io.Serializable
 
@@ -28,6 +31,11 @@ class IDDigitalSDK private constructor() {
         this.apiKey = apiKey
         AmplifyInitializer.initialize(context)
         registerPermissionLauncher(context)
+
+        startKoin {
+            androidContext(context.applicationContext)
+            modules(sdkModule)
+        }
     }
 
     fun startLiveness(context: Context, document: Document, onError: (IDDigitalError) -> Unit, onCompleted: (String) -> Unit) {

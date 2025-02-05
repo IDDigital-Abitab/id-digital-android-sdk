@@ -10,7 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CompletableDeferred
 
-object PermissionsManager {
+object PermissionsManager: PermissionsManagerInterface {
 
     const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 
@@ -29,14 +29,14 @@ object PermissionsManager {
         )
     }
 
-    fun hasCameraPermission(context: Context): Boolean {
+    override fun hasCameraPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
             CAMERA_PERMISSION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    suspend fun requestCameraPermission(context: Context): Boolean {
+    override suspend fun requestCameraPermission(context: Context): Boolean {
         val deferred = CompletableDeferred<Boolean>()
         permissionDeferred = deferred
         cameraPermissionLauncher.launch(CAMERA_PERMISSION)

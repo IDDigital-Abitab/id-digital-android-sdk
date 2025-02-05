@@ -9,7 +9,6 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -40,39 +39,28 @@ import com.amplifyframework.ui.liveness.model.FaceLivenessDetectionException
 import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import uy.com.abitab.iddigitalsdk.CallbackHandler
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.GENERIC_ERROR_MESSAGE
 import uy.com.abitab.iddigitalsdk.IDDigitalError
-import uy.com.abitab.iddigitalsdk.utils.PermissionsManager
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
 import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
 import uy.com.abitab.iddigitalsdk.composables.InstructionsScreen
 import uy.com.abitab.iddigitalsdk.composables.PostLivenessProcessing
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
-import uy.com.abitab.iddigitalsdk.data.repositories.LivenessRepositoryImpl
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessUiState
 import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessViewModel
-import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessViewModelFactory
 import java.io.IOException
 
 class LivenessActivity : ComponentActivity() {
-    private lateinit var livenessService: LivenessService
-    private val viewModel: LivenessViewModel by viewModels {
-        LivenessViewModelFactory(
-            createLivenessChallengeUseCase,
-            executeLivenessChallengeUseCase,
-            application
-        )
-    }
+    private val livenessService: LivenessService by inject()
+    private val viewModel: LivenessViewModel by viewModel()
     private var accessToken: String? = null
-
-    private lateinit var createLivenessChallengeUseCase: CreateLivenessChallengeUseCase
-    private lateinit var executeLivenessChallengeUseCase: ExecuteLivenessChallengeUseCase
-
 
     inline fun <reified T> Gson.fromJson(json: String?): T? {
         return fromJson(json, T::class.java)
@@ -102,12 +90,6 @@ class LivenessActivity : ComponentActivity() {
             return
         }
 
-
-        livenessService = LivenessService(accessToken!!)
-        val livenessRepository = LivenessRepositoryImpl(livenessService)
-        createLivenessChallengeUseCase = CreateLivenessChallengeUseCase(livenessRepository)
-        executeLivenessChallengeUseCase = ExecuteLivenessChallengeUseCase(livenessRepository)
-
         registerPermissionLauncher(this)
 
         setContent {
@@ -116,7 +98,6 @@ class LivenessActivity : ComponentActivity() {
             if (showInstructions) {
                 InstructionsScreen(onStart = {
                     showInstructions = false
-//                    startLivenessFlow(document)
                     viewModel.startLiveness(document)
                 }, onBack = { finish() })
             } else {
@@ -145,22 +126,18 @@ class LivenessActivity : ComponentActivity() {
                     viewModel.uiState.collect { uiState ->
                         when (uiState) {
                             is LivenessUiState.Initial -> {
-                                // Estado inicial, no hacer nada
                             }
 
                             is LivenessUiState.Loading -> {
-                                // Mostrar un indicador de carga
                                 Log.d("LivenessActivity", "Cargando...")
                             }
 
                             is LivenessUiState.Success -> {
-                                // Proceso completado con éxito, usar uiState.challengeId
                                 Log.d("LivenessActivity", "Éxito: ${uiState.challengeId}")
                                 startFaceLivenessDetector(uiState.challengeId)
                             }
 
                             is LivenessUiState.Error -> {
-                                // Ocurrió un error, mostrar un mensaje de error
                                 Log.e("LivenessActivity", "Error: ${uiState.error}")
                                 when (uiState.error) {
                                     is IDDigitalError.NetworkError -> {
