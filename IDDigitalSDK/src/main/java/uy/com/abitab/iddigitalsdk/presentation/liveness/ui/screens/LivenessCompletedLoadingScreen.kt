@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk.composables
+package uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +27,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import uy.com.abitab.iddigitalsdk.R
+import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
 import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 
 @OptIn(ExperimentalMaterial3Api::class)

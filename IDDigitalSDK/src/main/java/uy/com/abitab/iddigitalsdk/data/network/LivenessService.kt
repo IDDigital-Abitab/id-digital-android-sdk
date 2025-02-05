@@ -1,5 +1,6 @@
 package uy.com.abitab.iddigitalsdk.data.network
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -7,6 +8,7 @@ import okhttp3.OkHttpClient
 import okhttp3.ProtocolException
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.Document
@@ -36,15 +38,23 @@ class LivenessService(private val httpClient: OkHttpClient) {
                 .url(buildUrl("challenges/liveness/"))
                 .build()
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    throw IOException("Error en la solicitud: ${response.code}")
-                }
-                val responseBody = response.body.string()
+            try {
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw LivenessError.ServerError(response.code, response.body.string())
+                    }
+                    val responseBody = response.body.string()
 
-                val json = JSONObject(responseBody)
-                val dataObject = json.getJSONObject("data")
-                return@withContext dataObject.getString("challengeId")
+                    val json = JSONObject(responseBody)
+                    val dataObject = json.getJSONObject("data")
+                    return@withContext dataObject.getString("challengeId")
+                }
+            } catch (e: Throwable) {
+                when (e) {
+                    is LivenessError.ServerError -> throw e
+                    is IOException -> throw LivenessError.NetworkError(e)
+                    else -> throw LivenessError.UnknownError(e)
+                }
             }
         }
 
@@ -55,15 +65,23 @@ class LivenessService(private val httpClient: OkHttpClient) {
                 .url(buildUrl("challenges/${challengeId}/execute/"))
                 .build()
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    throw IOException("Error en la solicitud: ${response}")
-                }
-                val responseBody = response.body.string()
+            try {
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw LivenessError.ServerError(response.code, response.body.string())
+                    }
+                    val responseBody = response.body.string()
 
-                val json = JSONObject(responseBody)
-                val dataObject = json.getJSONObject("data")
-                return@withContext dataObject.getString("sessionId")
+                    val json = JSONObject(responseBody)
+                    val dataObject = json.getJSONObject("data")
+                    return@withContext dataObject.getString("sessionId")
+                }
+            } catch (e: Throwable) {
+                when (e) {
+                    is LivenessError.ServerError -> throw e
+                    is IOException -> throw LivenessError.NetworkError(e)
+                    else -> throw LivenessError.UnknownError(e)
+                }
             }
         }
 
@@ -77,12 +95,37 @@ class LivenessService(private val httpClient: OkHttpClient) {
             try {
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
-                        throw IOException("Error en la solicitud: ${response}")
+                        val errorBody = response.body.string()
+                        throw LivenessError.ServerError(response.code, errorBody)
                     }
+                    return@withContext
                 }
-            } catch (e: ProtocolException) {
-                // Avoid crashing when the server returns a 204 No Content response with application/json content type
+            } catch (e: Throwable) {
+                when (e) {
+                    is ProtocolException -> {
+                        // ignore this error
+                        return@withContext
+                    }
+                    is LivenessError.ServerError -> throw e
+                    is IOException -> throw LivenessError.NetworkError(e)
+                    else -> throw LivenessError.UnknownError(e)
+                }
             }
-            return@withContext
         }
+}
+
+sealed class LivenessError(
+    val code: Int,
+    override val message: String,
+    override val cause: Throwable? = null
+) :
+    Throwable(message, cause) {
+    data class NetworkError(val exception: IOException) :
+        LivenessError(1, "Error de red: ${exception.message}", exception)
+
+    data class ServerError(val statusCode: Int, val responseBody: String) : // Cambiado
+        LivenessError(2, "Error del servidor: $statusCode - $responseBody")
+
+    data class UnknownError(val exception: Throwable) :
+        LivenessError(3, "Error desconocido: ${exception.message}", exception)
 }

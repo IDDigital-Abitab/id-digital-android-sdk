@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk.presentation.ui.activities
+package uy.com.abitab.iddigitalsdk.presentation.liveness.ui
 
 import FaceLivenessComponent
 import LoadingScreen
@@ -28,19 +28,19 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import uy.com.abitab.iddigitalsdk.CallbackHandler
 import uy.com.abitab.iddigitalsdk.GENERIC_ERROR_MESSAGE
 import uy.com.abitab.iddigitalsdk.IDDigitalError
-import uy.com.abitab.iddigitalsdk.composables.LivenessInstructionsScreen
-import uy.com.abitab.iddigitalsdk.composables.LivenessCompletedLoadingScreen
+import uy.com.abitab.iddigitalsdk.data.network.LivenessError
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessInstructionsScreen
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessCompletedLoadingScreen
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
 import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessUiState
-import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessViewModel
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessUiState
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessViewModel
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
 import java.io.IOException
 
 class LivenessActivity : ComponentActivity() {
     private val livenessService: LivenessService by inject()
     private val viewModel: LivenessViewModel by viewModel()
-    private var accessToken: String? = null
 
     inline fun <reified T> Gson.fromJson(json: String?): T? {
         return fromJson(json, T::class.java)
@@ -51,15 +51,13 @@ class LivenessActivity : ComponentActivity() {
 
         configureSystemUI()
 
-        accessToken = intent.getStringExtra(EXTRA_ACCESS_TOKEN)
-
         val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
         } else {
             @Suppress("DEPRECATION") intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
         }
 
-        if (accessToken == null || document == null) {
+        if (document == null) {
             CallbackHandler.onError(
                 IDDigitalError.WrongDataError(
                     "No se ingresó un documento, o el mismo no es válido.",
@@ -100,9 +98,26 @@ class LivenessActivity : ComponentActivity() {
                                 Log.d("LivenessActivity", "Loading...")
                             }
 
+                            is LivenessUiState.ChallengeCreated -> {
+                                Log.d(
+                                    "LivenessActivity",
+                                    "ChallengeCreated: ${uiState.challengeId}"
+                                )
+                                startFaceLivenessDetector(uiState.challengeId)
+                            }
+
+                            is LivenessUiState.ChallengeCompleted -> {
+                                Log.d(
+                                    "LivenessActivity",
+                                    "ChallengeCompleted: ${uiState.challengeId}"
+                                )
+                                viewModel.validateChallenge(uiState.challengeId)
+                            }
+
                             is LivenessUiState.Success -> {
                                 Log.d("LivenessActivity", "Success: ${uiState.challengeId}")
-                                startFaceLivenessDetector(uiState.challengeId)
+                                CallbackHandler.onCompleted(uiState.challengeId)
+                                finish()
                             }
 
                             is LivenessUiState.Error -> {
@@ -167,17 +182,9 @@ class LivenessActivity : ComponentActivity() {
 
 
                 }
-            } catch (e: IOException) {
+            } catch (e: LivenessError) {
                 CallbackHandler.onError(
-                    IDDigitalError.NetworkError(
-                        "Ha ocurrido un error de red. Por favor, intenta nuevamente.",
-                        e
-                    )
-                )
-                finish()
-            } catch (e: Exception) {
-                CallbackHandler.onError(
-                    IDDigitalError.UnknownError(GENERIC_ERROR_MESSAGE)
+                    IDDigitalError.UnknownError(GENERIC_ERROR_MESSAGE, e)
                 )
                 finish()
             }
@@ -212,28 +219,21 @@ class LivenessActivity : ComponentActivity() {
     }
 
     private fun onLivenessComplete(challengeId: String) {
-        lifecycleScope.launch {
-            livenessService.validateChallenge(challengeId)
-            CallbackHandler.onCompleted(challengeId)
-            finish()
-        }
+        viewModel.onLivenessCompleted(challengeId)
         setContent {
             LivenessCompletedLoadingScreen()
         }
     }
 
     companion object {
-        private const val EXTRA_ACCESS_TOKEN = "EXTRA_ACCESS_TOKEN"
         private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
 
         fun createIntent(
             context: Context,
-            accessToken: String,
             document: Document,
 
             ): Intent {
             return Intent(context, LivenessActivity::class.java).apply {
-                putExtra(EXTRA_ACCESS_TOKEN, accessToken)
                 putExtra(EXTRA_DOCUMENT, document)
             }
         }

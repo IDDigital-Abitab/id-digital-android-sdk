@@ -14,6 +14,6 @@ class LivenessRepositoryImpl(private val livenessService: LivenessService) : Liv
     }
 
     override suspend fun validateChallenge(challengeId: String) {
-        livenessService.validateChallenge(challengeId)
+        return livenessService.validateChallenge(challengeId)
     }
 }

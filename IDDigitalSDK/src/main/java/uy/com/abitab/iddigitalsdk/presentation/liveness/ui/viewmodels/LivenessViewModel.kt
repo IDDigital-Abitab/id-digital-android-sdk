@@ -1,4 +1,4 @@
-package uy.com.abitab.iddigitalsdk.presentation.viewmodels
+package uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels
 
 import android.app.Application
 import android.util.Log
@@ -14,13 +14,16 @@ import uy.com.abitab.iddigitalsdk.IDDigitalError
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManagerInterface
 
 class LivenessViewModel(
+    application: Application,
+    private val permissionsManager: PermissionsManagerInterface,
     private val createLivenessChallengeUseCase: CreateLivenessChallengeUseCase,
     private val executeLivenessChallengeUseCase: ExecuteLivenessChallengeUseCase,
-    application: Application,
-    private val permissionsManager: PermissionsManagerInterface
+    private val validateLivenessChallengeUseCase: ValidateLivenessChallengeUseCase
+
 ) : AndroidViewModel(application) {
 
     private val _permissionResultChannel = Channel<Boolean>()
@@ -54,29 +57,39 @@ class LivenessViewModel(
 
     private fun createChallenge(document: Document) {
         viewModelScope.launch {
-            Log.d("LivenessViewModel", "Creando challenge")
             val challengeId = try {
                 createLivenessChallengeUseCase(document)
-            } catch (e: Exception) {
-                Log.e("LivenessViewModel", "Error al crear el challenge", e)
+            } catch (e: Throwable) {
                 _uiState.value =
                     LivenessUiState.Error(IDDigitalError.UnknownError("Error al crear el challenge: ${e.message}"))
                 return@launch
             }
 
-            Log.d("LivenessViewModel", "Ejecutando challenge")
             try {
                 executeLivenessChallengeUseCase(challengeId)
-            } catch (e: Exception) {
-                Log.e("LivenessViewModel", "Error al ejecutar el challenge", e)
+            } catch (e: Throwable) {
                 _uiState.value =
                     LivenessUiState.Error(IDDigitalError.UnknownError("Error al ejecutar el challenge: ${e.message}"))
                 return@launch
             }
 
-            Log.d("LivenessViewModel", "Proceso de liveness completado con éxito")
-            _uiState.value = LivenessUiState.Success(challengeId)
+            _uiState.value = LivenessUiState.ChallengeCreated(challengeId)
         }
+    }
+
+    fun validateChallenge(challengeId: String) {
+        viewModelScope.launch {
+            try {
+                validateLivenessChallengeUseCase(challengeId)
+                _uiState.value =
+                    LivenessUiState.Success(challengeId)
+            } catch (e: Throwable) {
+                _uiState.value =
+                    LivenessUiState.Error(IDDigitalError.UnknownError("Error validating challenge: ${e.message}"))
+                return@launch
+            }
+        }
+
     }
 
     fun onPermissionResult(isGranted: Boolean) {
@@ -84,12 +97,18 @@ class LivenessViewModel(
             if (!cameraPermissionRequested) return@launch
             cameraPermissionRequested = false
             if (!isGranted) {
-                Log.e("LivenessViewModel", "Permiso de cámara denegado")
+                Log.e("LivenessViewModel", "Camera permission denied")
                 _uiState.value =
-                    LivenessUiState.Error(IDDigitalError.CameraPermissionError("Permiso de cámara denegado."))
+                    LivenessUiState.Error(IDDigitalError.CameraPermissionError("Camera permission denied"))
                 return@launch
             }
             createChallenge(document)
+        }
+    }
+
+    fun onLivenessCompleted(challengeId: String) {
+        viewModelScope.launch {
+            _uiState.value = LivenessUiState.ChallengeCompleted(challengeId)
         }
     }
 }
@@ -97,6 +116,8 @@ class LivenessViewModel(
 sealed class LivenessUiState {
     object Initial : LivenessUiState()
     object Loading : LivenessUiState()
+    data class ChallengeCreated(val challengeId: String) : LivenessUiState()
+    data class ChallengeCompleted(val challengeId: String) : LivenessUiState()
     data class Success(val challengeId: String) : LivenessUiState()
     data class Error(val error: IDDigitalError) : LivenessUiState()
 }

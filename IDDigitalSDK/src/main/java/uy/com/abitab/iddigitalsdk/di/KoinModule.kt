@@ -8,7 +8,7 @@ import uy.com.abitab.iddigitalsdk.domain.repositories.LivenessRepository
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCase
-import uy.com.abitab.iddigitalsdk.presentation.viewmodels.LivenessViewModel
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessViewModel
 import okhttp3.OkHttpClient
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
@@ -41,12 +41,10 @@ internal fun sdkModule() = module {
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }
 
     factory { CreateLivenessChallengeUseCase(get()) }
-
     factory { ExecuteLivenessChallengeUseCase(get()) }
-
     factory { ValidateLivenessChallengeUseCase(get()) }
 
     viewModel {
-        LivenessViewModel(get(), get(), get(), get())
+        LivenessViewModel(get(), get(), get(), get(), get())
     }
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
-import uy.com.abitab.iddigitalsdk.presentation.ui.activities.LivenessActivity
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.di.sdkModule
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
@@ -55,7 +55,7 @@ class IDDigitalSDK private constructor(
         CallbackHandler.setOnErrorHandler(onError)
         CallbackHandler.setOnCompletedHandler(onCompleted)
 
-        val intent = LivenessActivity.createIntent(context, apiKey, document)
+        val intent = LivenessActivity.createIntent(context, document)
         context.startActivity(intent)
     }
 }
