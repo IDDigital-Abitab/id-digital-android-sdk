@@ -36,7 +36,7 @@ internal fun sdkModule() = module {
             .build()
     }
 
-    single { LivenessService(get()) }
+    single { LivenessService(get(), get()) }
 
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }
 

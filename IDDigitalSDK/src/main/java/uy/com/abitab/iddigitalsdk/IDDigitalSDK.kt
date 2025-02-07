@@ -8,7 +8,7 @@ import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.di.sdkModule
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
-import java.io.Serializable
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
 class IDDigitalSDK private constructor(
     private val apiKey: String
@@ -40,11 +40,11 @@ class IDDigitalSDK private constructor(
         }
 
         internal fun getApiKey(): String {
-            return instance?.apiKey ?: throw IllegalStateException("IDDigitalSDK has not been initialized. Call initialize() first.")
+            return instance?.apiKey
+                ?: throw IllegalStateException("IDDigitalSDK has not been initialized. Call initialize() first.")
 
         }
     }
-
 
     fun startLiveness(
         context: Context,
@@ -64,28 +64,6 @@ class IDDigitalSDK private constructor(
 const val GENERIC_ERROR_MESSAGE = "Ha ocurrido un error"
 
 
-sealed class IDDigitalError(open val message: String, open val exception: Throwable? = null) :
-    Serializable {
-    data class UnknownError(
-        override val message: String, override val exception: Throwable? = null
-    ) : IDDigitalError(message, exception)
-
-    data class NetworkError(
-        override val message: String, override val exception: Throwable? = null
-    ) : IDDigitalError(message, exception)
-
-    data class CameraPermissionError(
-        override val message: String, override val exception: Throwable? = null
-    ) : IDDigitalError(message, exception)
-
-    data class WrongDataError(
-        override val message: String, override val exception: Throwable? = null
-    ) : IDDigitalError(message, exception)
-
-    data class UserCancelledError(
-        override val message: String, override val exception: Throwable? = null
-    ) : IDDigitalError(message, exception)
-}
 
 object CallbackHandler {
     private var onErrorHandler: ((IDDigitalError) -> Unit)? = null

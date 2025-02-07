@@ -1,5 +1,6 @@
 package uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,11 +28,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import uy.com.abitab.iddigitalsdk.R
-import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
+import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun LivenessCompletedLoadingScreen() {
     val composition by rememberLottieComposition(
@@ -39,17 +41,7 @@ fun LivenessCompletedLoadingScreen() {
     )
 
     AbitabTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {},
-                    navigationIcon = {},
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        scrolledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    )
-                )
-            }) { innerPadding ->
+        Scaffold { innerPadding ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -59,7 +51,7 @@ fun LivenessCompletedLoadingScreen() {
                             bottom = innerPadding.calculateBottomPadding(),
                         )
                     )
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surfaceDim)
                     .padding(horizontal = 24.dp)
             ) {
                 Column(

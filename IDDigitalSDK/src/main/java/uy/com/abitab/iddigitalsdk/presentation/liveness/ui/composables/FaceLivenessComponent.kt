@@ -4,13 +4,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.amplifyframework.ui.liveness.model.FaceLivenessDetectionException
 import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
-import uy.com.abitab.iddigitalsdk.composables.AbitabTheme
+import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 
 @Composable
 fun FaceLivenessComponent(

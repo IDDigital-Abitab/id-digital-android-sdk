@@ -1,5 +1,6 @@
 package uy.com.abitab.iddigitalsdk.data.network
 
+import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -8,13 +9,16 @@ import okhttp3.OkHttpClient
 import okhttp3.ProtocolException
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
+import uy.com.abitab.iddigitalsdk.utils.NetworkUtils
+import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 import java.io.IOException
+import java.net.ConnectException
 
-class LivenessService(private val httpClient: OkHttpClient) {
+class LivenessService(private val httpClient: OkHttpClient, private val context: Context) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private fun buildUrl(path: String): String {
@@ -24,6 +28,10 @@ class LivenessService(private val httpClient: OkHttpClient) {
 
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
+            if (!NetworkUtils.isInternetAvailable(context)) {
+                throw IDDigitalError.NetworkError.NoInternetConnection
+            }
+
             val data = mapOf(
                 "documentNumber" to document.number,
                 "documentType" to (document.type ?: "ci"),
@@ -40,26 +48,41 @@ class LivenessService(private val httpClient: OkHttpClient) {
 
             try {
                 httpClient.newCall(request).execute().use { response ->
+                    val responseBody = response.body?.string()
                     if (!response.isSuccessful) {
-                        throw LivenessError.ServerError(response.code, response.body.string())
-                    }
-                    val responseBody = response.body.string()
+                        throw when (response.code) {
+                            in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
+                                response.code,
+                                responseBody
+                            )
 
+                            400, 404 -> IDDigitalError.ServerError.BadResponse(
+                                response.code,
+                                responseBody
+                            )
+
+                            else -> IDDigitalError.ServerError.UnexpectedResponse(
+                                response.code,
+                                responseBody
+                            )
+                        }
+                    }
                     val json = JSONObject(responseBody)
                     val dataObject = json.getJSONObject("data")
                     return@withContext dataObject.getString("challengeId")
                 }
             } catch (e: Throwable) {
-                when (e) {
-                    is LivenessError.ServerError -> throw e
-                    is IOException -> throw LivenessError.NetworkError(e)
-                    else -> throw LivenessError.UnknownError(e)
-                }
+                throw e.toIDDigitalError("Error in createChallenge")
             }
         }
 
     suspend fun executeChallenge(challengeId: String): String =
         withContext(Dispatchers.IO) {
+            if (!NetworkUtils.isInternetAvailable(context)) {
+                Log.d("LivenessService", "executeChallenge - No internet connection")
+                throw IDDigitalError.NetworkError.NoInternetConnection
+            }
+
             val request = Request.Builder()
                 .post("{}".toRequestBody(JSON))
                 .url(buildUrl("challenges/${challengeId}/execute/"))
@@ -67,26 +90,42 @@ class LivenessService(private val httpClient: OkHttpClient) {
 
             try {
                 httpClient.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        throw LivenessError.ServerError(response.code, response.body.string())
-                    }
                     val responseBody = response.body.string()
+                    if (!response.isSuccessful) {
+                        throw when (response.code) {
+                            in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
+                                response.code,
+                                responseBody
+                            )
+
+                            400, 404 -> IDDigitalError.ServerError.BadResponse(
+                                response.code,
+                                responseBody
+                            )
+
+                            else -> IDDigitalError.ServerError.UnexpectedResponse(
+                                response.code,
+                                responseBody
+                            )
+                        }
+                    }
 
                     val json = JSONObject(responseBody)
                     val dataObject = json.getJSONObject("data")
                     return@withContext dataObject.getString("sessionId")
                 }
             } catch (e: Throwable) {
-                when (e) {
-                    is LivenessError.ServerError -> throw e
-                    is IOException -> throw LivenessError.NetworkError(e)
-                    else -> throw LivenessError.UnknownError(e)
-                }
+                throw e.toIDDigitalError("Error in executeChallenge")
             }
         }
 
     suspend fun validateChallenge(challengeId: String): Unit =
         withContext(Dispatchers.IO) {
+            if (!NetworkUtils.isInternetAvailable(context)) {
+                Log.d("LivenessService", "validateChallenge - No internet connection")
+                throw IDDigitalError.NetworkError.NoInternetConnection
+            }
+
             val request = Request.Builder()
                 .post("{}".toRequestBody(JSON))
                 .url(buildUrl("challenges/${challengeId}/validate/"))
@@ -95,37 +134,33 @@ class LivenessService(private val httpClient: OkHttpClient) {
             try {
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
-                        val errorBody = response.body.string()
-                        throw LivenessError.ServerError(response.code, errorBody)
+                        val responseBody = response.body.string()
+                        throw when (response.code) {
+                            in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
+                                response.code,
+                                responseBody
+                            )
+
+                            400, 404 -> IDDigitalError.ServerError.BadResponse(
+                                response.code,
+                                responseBody
+                            )
+
+                            else -> IDDigitalError.ServerError.UnexpectedResponse(
+                                response.code,
+                                responseBody
+                            )
+                        }
                     }
                     return@withContext
                 }
             } catch (e: Throwable) {
-                when (e) {
-                    is ProtocolException -> {
-                        // ignore this error
-                        return@withContext
-                    }
-                    is LivenessError.ServerError -> throw e
-                    is IOException -> throw LivenessError.NetworkError(e)
-                    else -> throw LivenessError.UnknownError(e)
+                if (e is ProtocolException) {
+                    // Ignore ProtocolException. This can happen with a 204 No Content
+                    // response that has an (incorrect) Content-Type: application/json header
+                    return@withContext
                 }
+                throw e.toIDDigitalError("Error in validateChallenge")
             }
         }
-}
-
-sealed class LivenessError(
-    val code: Int,
-    override val message: String,
-    override val cause: Throwable? = null
-) :
-    Throwable(message, cause) {
-    data class NetworkError(val exception: IOException) :
-        LivenessError(1, "Error de red: ${exception.message}", exception)
-
-    data class ServerError(val statusCode: Int, val responseBody: String) : // Cambiado
-        LivenessError(2, "Error del servidor: $statusCode - $responseBody")
-
-    data class UnknownError(val exception: Throwable) :
-        LivenessError(3, "Error desconocido: ${exception.message}", exception)
 }

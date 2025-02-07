@@ -7,14 +7,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.IDDigitalError
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 import uy.com.abitab.iddigitalsdk.composables.AppTheme
 import java.io.IOException
@@ -58,6 +56,7 @@ class MainActivity : ComponentActivity() {
             when(error) {
                 is IDDigitalError.NetworkError -> {
                     Toast.makeText(this, "Ha ocurrido un error de conexión", Toast.LENGTH_SHORT).show()
+                    Log.d("MainActivity", error.toString() )
                 }
                 is IDDigitalError.CameraPermissionError -> {
                     Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
@@ -68,8 +67,26 @@ class MainActivity : ComponentActivity() {
                 is IDDigitalError.UserCancelledError -> {
                     Toast.makeText(this, "Has cancelado la validación, vuelve a intentarlo", Toast.LENGTH_SHORT).show()
                 }
-                is IDDigitalError.WrongDataError -> {
-                    Toast.makeText(this, "Datos incorrectos", Toast.LENGTH_SHORT).show()
+                is IDDigitalError.SDKError.InvalidApiKey -> {
+                    Toast.makeText(this, "API Key inválida", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.SDKError.InvalidDocument -> {
+                    Toast.makeText(this, "Documento inválido", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.SDKError.NotInitialized -> {
+                    Toast.makeText(this, "SDK no inicializado", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.ServerError.BadResponse -> {
+                    Toast.makeText(this, "Respuesta del servidor inválida", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.ServerError.ServiceUnavailable -> {
+                    Toast.makeText(this, "Servicio no disponible", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.ServerError.UnexpectedResponse -> {
+                    Toast.makeText(this, "Respuesta inesperada del servidor", Toast.LENGTH_SHORT).show()
+                }
+                is IDDigitalError.TimeoutError -> {
+                    Toast.makeText(this, "Tiempo de espera agotado", Toast.LENGTH_SHORT).show()
                 }
             }
         }, onCompleted = { challengeId ->

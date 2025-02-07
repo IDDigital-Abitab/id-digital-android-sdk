@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="uy.com.abitab.iddigitalsdk">
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application>
-        <!-- Declarar LivenessActivity -->
         <activity
             android:name="uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity"
             android:exported="false"
