@@ -1,8 +1,7 @@
-package uy.com.abitab.iddigitalsdk.data.repositories
+package uy.com.abitab.iddigitalsdk.domain.repositories
 
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
 import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.domain.repositories.LivenessRepository
 
 class LivenessRepositoryImpl(private val livenessService: LivenessService) : LivenessRepository {
     override suspend fun createChallenge(document: Document): String {

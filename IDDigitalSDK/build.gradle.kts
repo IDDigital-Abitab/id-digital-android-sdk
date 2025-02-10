@@ -82,6 +82,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)

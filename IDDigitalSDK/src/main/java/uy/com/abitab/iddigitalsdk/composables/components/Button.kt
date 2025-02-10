@@ -20,12 +20,13 @@ import androidx.compose.material3.Button as MaterialButton
 
 @Composable
 fun Button(
+    modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit
 ) {
     return MaterialButton(
         onClick = onClick,
-        modifier = Modifier.height(56.dp),
+        modifier = modifier.height(56.dp),
         shape = MaterialTheme.shapes.medium,
 
     ) {

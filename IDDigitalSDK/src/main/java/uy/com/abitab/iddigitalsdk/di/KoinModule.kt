@@ -3,7 +3,7 @@ package uy.com.abitab.iddigitalsdk.di
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
-import uy.com.abitab.iddigitalsdk.data.repositories.LivenessRepositoryImpl
+import uy.com.abitab.iddigitalsdk.domain.repositories.LivenessRepositoryImpl
 import uy.com.abitab.iddigitalsdk.domain.repositories.LivenessRepository
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
@@ -11,6 +11,11 @@ import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCa
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessViewModel
 import okhttp3.OkHttpClient
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.domain.repositories.PinRepository
+import uy.com.abitab.iddigitalsdk.domain.repositories.PinRepositoryImpl
+import uy.com.abitab.iddigitalsdk.domain.usecases.CreatePinChallengeUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.ExecutePinChallengeUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.ValidatePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializerInterface
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager
@@ -39,10 +44,14 @@ internal fun sdkModule() = module {
     single { LivenessService(get(), get()) }
 
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }
+    single<PinRepository> { PinRepositoryImpl(get()) }
 
     factory { CreateLivenessChallengeUseCase(get()) }
     factory { ExecuteLivenessChallengeUseCase(get()) }
     factory { ValidateLivenessChallengeUseCase(get()) }
+    factory { CreatePinChallengeUseCase(get()) }
+    factory { ExecutePinChallengeUseCase(get()) }
+    factory { ValidatePinChallengeUseCase(get()) }
 
     viewModel {
         LivenessViewModel(get(), get(), get(), get(), get())

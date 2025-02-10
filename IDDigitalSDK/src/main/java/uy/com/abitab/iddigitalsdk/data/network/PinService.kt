@@ -15,10 +15,8 @@ import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.NetworkUtils
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
-import java.io.IOException
-import java.net.ConnectException
 
-class LivenessService(private val httpClient: OkHttpClient, private val context: Context) {
+class PinService(private val httpClient: OkHttpClient, private val context: Context) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private fun buildUrl(path: String): String {
@@ -43,7 +41,7 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
 
             val request = Request.Builder()
                 .post(requestBody)
-                .url(buildUrl("challenges/liveness/"))
+                .url(buildUrl("challenges/pin/"))
                 .build()
 
             try {
@@ -76,10 +74,10 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
             }
         }
 
-    suspend fun executeChallenge(challengeId: String): String =
+    suspend fun executeChallenge(challengeId: String): Unit =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
-                Log.d("LivenessService", "executeChallenge - No internet connection")
+                Log.d("PinService", "executeChallenge - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
 
@@ -110,11 +108,14 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
                         }
                     }
 
-                    val json = JSONObject(responseBody)
-                    val dataObject = json.getJSONObject("data")
-                    return@withContext dataObject.getString("sessionId")
+                    return@withContext
                 }
             } catch (e: Throwable) {
+                if (e is ProtocolException) {
+                    // Ignore ProtocolException. This can happen with a 204 No Content
+                    // response that has an (incorrect) Content-Type: application/json header
+                    return@withContext
+                }
                 throw e.toIDDigitalError("Error in executeChallenge")
             }
         }
@@ -122,7 +123,7 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
     suspend fun validateChallenge(challengeId: String): Unit =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
-                Log.d("LivenessService", "validateChallenge - No internet connection")
+                Log.d("PinService", "validateChallenge - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
 

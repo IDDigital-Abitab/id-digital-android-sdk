@@ -72,7 +72,6 @@ fun LivenessInstructionsScreen(onStart: () -> Unit, onBack: () -> Unit) {
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                                 contentDescription = "Volver",
                                 tint = MaterialTheme.colorScheme.onSurface
-
                             )
                         }
                     },

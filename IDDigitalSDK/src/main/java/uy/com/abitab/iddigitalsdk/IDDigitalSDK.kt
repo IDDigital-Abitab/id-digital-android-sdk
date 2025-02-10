@@ -7,6 +7,7 @@ import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLau
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.di.sdkModule
+import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.PinActivity
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
@@ -56,6 +57,19 @@ class IDDigitalSDK private constructor(
         CallbackHandler.setOnCompletedHandler(onCompleted)
 
         val intent = LivenessActivity.createIntent(context, document)
+        context.startActivity(intent)
+    }
+
+    fun requestPin(
+        context: Context,
+        document: Document,
+        onError: (IDDigitalError) -> Unit,
+        onCompleted: (String) -> Unit
+    ) {
+        CallbackHandler.setOnErrorHandler(onError)
+        CallbackHandler.setOnCompletedHandler(onCompleted)
+
+        val intent = PinActivity.createIntent(context, document)
         context.startActivity(intent)
     }
 }
