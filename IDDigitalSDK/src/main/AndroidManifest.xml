@@ -10,6 +10,10 @@
             android:exported="false"
             android:theme="@style/Theme.Material3.Light"
             />
+        <activity android:name="uy.com.abitab.iddigitalsdk.presentation.pin.ui.PinActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Material3.Light"
+            />
     </application>
 
 </manifest>

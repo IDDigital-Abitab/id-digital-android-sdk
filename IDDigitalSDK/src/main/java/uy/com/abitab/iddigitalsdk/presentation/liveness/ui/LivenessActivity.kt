@@ -127,18 +127,7 @@ class LivenessActivity : ComponentActivity() {
 
     private fun configureSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
         enableEdgeToEdge()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val controller = WindowInsetsControllerCompat(window, window.decorView)
-            controller.isAppearanceLightStatusBars = true
-
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        }
     }
 
     private fun startFaceLivenessDetector(challengeId: String, sessionId: String) {

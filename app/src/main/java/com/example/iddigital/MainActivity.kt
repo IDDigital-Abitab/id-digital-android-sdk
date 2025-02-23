@@ -23,16 +23,22 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 import uy.com.abitab.iddigitalsdk.composables.AppTheme
+import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import java.io.IOException
+
+enum class ChallegeType {
+    PIN, LIVENESS;
+}
 
 class MainActivity : ComponentActivity() {
 
     private val httpClient = OkHttpClient.Builder().build()
     private lateinit var sdkInstance: IDDigitalSDK
+
+    private val methodToUse = ChallegeType.PIN
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,85 +47,138 @@ class MainActivity : ComponentActivity() {
         sdkInstance = IDDigitalSDK.initialize(this, apiKey)
 
         setContent {
-            MainScreen(onStartLivenessClick = {
-                startLiveness()
+            MainScreen(onContinue = {
+                val validateMethod = getMethodForChallengeType(methodToUse)
+                validateMethod()
             })
         }
     }
 
-    private fun startLiveness() {
+    private fun startPinChallenge() {
+        val document = Document(
+            number = "45743055"
+        )
+        try {
+            sdkInstance.requestPin(this, document, onError = { error ->
+                handleIDDigitalSdkError(error)
+            }, onCompleted = { challengeId ->
+                checkChallengeResult(challengeId)
+            })
+        } catch (e: Exception) {
+            Log.d("MainActivity", e.toString())
+        }
+    }
+
+    private fun startLivenessChallenge() {
         val document = Document(
             number = "45743055"
         )
 
         sdkInstance.startLiveness(this, document, onError = { error ->
-            when(error) {
-                is IDDigitalError.NetworkError -> {
-                    Toast.makeText(this, "Ha ocurrido un error de conexión", Toast.LENGTH_SHORT).show()
-                    Log.d("MainActivity", error.toString() )
-                }
-                is IDDigitalError.CameraPermissionError -> {
-                    Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.UnknownError -> {
-                    Toast.makeText(this, "Error desconocido", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.UserCancelledError -> {
-                    Toast.makeText(this, "Has cancelado la validación, vuelve a intentarlo", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.SDKError.InvalidApiKey -> {
-                    Toast.makeText(this, "API Key inválida", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.SDKError.InvalidDocument -> {
-                    Toast.makeText(this, "Documento inválido", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.SDKError.NotInitialized -> {
-                    Toast.makeText(this, "SDK no inicializado", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.ServerError.BadResponse -> {
-                    Toast.makeText(this, "Respuesta del servidor inválida", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.ServerError.ServiceUnavailable -> {
-                    Toast.makeText(this, "Servicio no disponible", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.ServerError.UnexpectedResponse -> {
-                    Toast.makeText(this, "Respuesta inesperada del servidor", Toast.LENGTH_SHORT).show()
-                }
-                is IDDigitalError.TimeoutError -> {
-                    Toast.makeText(this, "Tiempo de espera agotado", Toast.LENGTH_SHORT).show()
-                }
-            }
+            handleIDDigitalSdkError(error)
         }, onCompleted = { challengeId ->
-            setContent {
-                ProcessingScreen()
+            checkChallengeResult(challengeId)
+        })
+    }
+
+    private fun getMethodForChallengeType(challengeType: ChallegeType): () -> Unit {
+        val methods = mapOf<ChallegeType, (() -> Unit)>(
+            ChallegeType.PIN to ::startPinChallenge,
+            ChallegeType.LIVENESS to ::startLivenessChallenge
+        )
+
+        return methods.getOrElse(challengeType) { { println("Challenge type not found") } }
+    }
+
+    private fun handleIDDigitalSdkError(error: IDDigitalError) {
+        when (error) {
+            is IDDigitalError.NetworkError -> {
+                Toast.makeText(this, "Ha ocurrido un error de conexión", Toast.LENGTH_SHORT).show()
+                Log.d("MainActivity", error.toString())
             }
-            lifecycleScope.launch {
-                val result = getChallengeResult(challengeId)
-                withContext(Dispatchers.Main) {
-                    setContent {
-                        AppTheme {
-                            if (result == ChallengeResult.SUCCESS) {
-                                SuccessScreen(onRetry = {
-                                    setContent {
-                                        MainScreen(onStartLivenessClick = {
-                                            startLiveness()
-                                        })
-                                    }
-                                })
-                            } else {
-                                ErrorScreen(onRetry = {
-                                    setContent {
-                                        MainScreen(onStartLivenessClick = {
-                                            startLiveness()
-                                        })
-                                    }
-                                })
-                            }
+
+            is IDDigitalError.CameraPermissionError -> {
+                Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.UnknownError -> {
+                Toast.makeText(this, "Error desconocido", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.UserCancelledError -> {
+                Toast.makeText(
+                    this,
+                    "Has cancelado la validación, vuelve a intentarlo",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is IDDigitalError.SDKError.InvalidApiKey -> {
+                Toast.makeText(this, "API Key inválida", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.SDKError.InvalidDocument -> {
+                Toast.makeText(this, "Documento inválido", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.SDKError.NotInitialized -> {
+                Toast.makeText(this, "SDK no inicializado", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.SDKError.TooManyAttempts -> {
+                Toast.makeText(this, "Demasiados intentos", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.ServerError.BadResponse -> {
+                Toast.makeText(this, "Respuesta del servidor inválida", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.ServerError.ServiceUnavailable -> {
+                Toast.makeText(this, "Servicio no disponible", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.ServerError.UnexpectedResponse -> {
+                Toast.makeText(this, "Respuesta inesperada del servidor", Toast.LENGTH_SHORT).show()
+            }
+
+            is IDDigitalError.TimeoutError -> {
+                Toast.makeText(this, "Tiempo de espera agotado", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun checkChallengeResult(challengeId: String) {
+        setContent {
+            ProcessingScreen()
+        }
+        lifecycleScope.launch {
+            val result = getChallengeResult(challengeId)
+            withContext(Dispatchers.Main) {
+                setContent {
+                    AppTheme {
+                        if (result == ChallengeResult.SUCCESS) {
+                            SuccessScreen(onRetry = {
+                                setContent {
+                                    MainScreen(onContinue = {
+                                        val validateMethod = getMethodForChallengeType(methodToUse)
+                                        validateMethod()
+                                    })
+                                }
+                            })
+                        } else {
+                            ErrorScreen(onRetry = {
+                                setContent {
+                                    MainScreen(onContinue = {
+                                        val validateMethod = getMethodForChallengeType(methodToUse)
+                                        validateMethod()
+                                    })
+                                }
+                            })
                         }
                     }
                 }
             }
-        })
+        }
     }
 
     enum class ChallengeResult {
@@ -128,6 +187,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun getChallengeResult(challengeId: String): ChallengeResult {
+        Log.d("MainActivity", "getChallengeResult: $challengeId")
         return withContext(Dispatchers.IO) {
             delay(2000)
             val baseUrl = BuildConfig.API_BASE_URL.trimEnd('/')
@@ -164,7 +224,7 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-    MainScreen(onStartLivenessClick = {
+    MainScreen(onContinue = {
 
     })
 }
@@ -172,7 +232,7 @@ fun MainScreenPreview() {
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainScreen(onStartLivenessClick: () -> Unit) {
+fun MainScreen(onContinue: () -> Unit) {
     AppTheme {
         Scaffold(topBar = {
             CenterAlignedTopAppBar(
@@ -185,7 +245,7 @@ fun MainScreen(onStartLivenessClick: () -> Unit) {
             )
         }) {
             TransferDetailsScreen(
-                onContinue = onStartLivenessClick
+                onContinue = onContinue
             )
         }
     }

@@ -7,7 +7,7 @@ import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLau
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.di.sdkModule
-import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.PinActivity
+import uy.com.abitab.iddigitalsdk.presentation.pin.ui.PinActivity
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 

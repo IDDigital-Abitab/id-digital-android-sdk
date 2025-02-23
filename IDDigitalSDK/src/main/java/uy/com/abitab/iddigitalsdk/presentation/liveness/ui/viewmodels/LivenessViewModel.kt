@@ -39,12 +39,6 @@ class LivenessViewModel(
     private lateinit var document: Document
     private var cameraPermissionRequested = false
 
-//    init {
-//        viewModelScope.launch {
-//            if (::document.isInitialized)
-//                _uiState.emit(LivenessUiState.Initial(document))
-//        }
-//    }
 
     fun startLiveness() {
         viewModelScope.launch {

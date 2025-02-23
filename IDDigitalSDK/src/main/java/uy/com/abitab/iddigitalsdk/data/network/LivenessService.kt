@@ -155,11 +155,6 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
                     return@withContext
                 }
             } catch (e: Throwable) {
-                if (e is ProtocolException) {
-                    // Ignore ProtocolException. This can happen with a 204 No Content
-                    // response that has an (incorrect) Content-Type: application/json header
-                    return@withContext
-                }
                 throw e.toIDDigitalError("Error in validateChallenge")
             }
         }

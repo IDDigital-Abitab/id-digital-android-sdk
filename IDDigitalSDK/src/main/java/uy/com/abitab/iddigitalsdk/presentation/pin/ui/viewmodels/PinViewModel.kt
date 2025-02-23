@@ -36,7 +36,7 @@ class PinViewModel(
         }
     }
 
-    private fun createChallenge() {
+    fun createChallenge() {
         viewModelScope.launch {
             Log.d("PinViewModel", "createChallenge")
             val challengeId = try {
@@ -63,13 +63,30 @@ class PinViewModel(
         }
     }
 
-    fun validateChallenge(challengeId: String) {
+    fun validateChallenge(challengeId: String, pin: String) {
         viewModelScope.launch {
             try {
-                validatePinChallengeUseCase(challengeId)
-                _uiState.emit(PinUiState.Success(challengeId))
+                val isValid = try {
+                    validatePinChallengeUseCase(challengeId, pin)
+                } catch (e: Throwable) {
+                    Log.e("PinViewModel", "Error al validar el challenge", e)
+                    val error = e.toIDDigitalError("Error validating challenge")
+                    _uiState.emit(PinUiState.Error(error))
+                    return@launch
+                }
+
+                if (!isValid) {
+                    _uiState.emit(PinUiState.ChallengeValidated(challengeId, isValid))
+                }
+                else {
+                    _uiState.emit(PinUiState.Success(challengeId))
+                }
             } catch (e: Throwable) {
-                _uiState.emit(PinUiState.Error(IDDigitalError.UnknownError("Error validating challenge: ${e.message}")))
+                if (e is IDDigitalError) {
+                    _uiState.emit(PinUiState.Error(e))
+                    return@launch
+                }
+                _uiState.emit(PinUiState.Error(IDDigitalError.UnknownError("Error validating challenge: ${e.message}"),))
                 return@launch
             }
         }
@@ -89,7 +106,7 @@ sealed class PinUiState {
     object Loading : PinUiState()
     data class ChallengeCreated(val challengeId: String) : PinUiState()
     data class ChallengeExecuted(val challengeId: String) : PinUiState()
-    data class ChallengeCompleted(val challengeId: String) : PinUiState()
+    data class ChallengeValidated(val challengeId: String, val isValid: Boolean) : PinUiState()
     data class Success(val challengeId: String) : PinUiState()
     data class Error(val error: IDDigitalError) : PinUiState()
 }

@@ -2,11 +2,11 @@ package uy.com.abitab.iddigitalsdk.data.network
 
 import android.content.Context
 import android.util.Log
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.ProtocolException
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
@@ -111,24 +111,22 @@ class PinService(private val httpClient: OkHttpClient, private val context: Cont
                     return@withContext
                 }
             } catch (e: Throwable) {
-                if (e is ProtocolException) {
-                    // Ignore ProtocolException. This can happen with a 204 No Content
-                    // response that has an (incorrect) Content-Type: application/json header
-                    return@withContext
-                }
                 throw e.toIDDigitalError("Error in executeChallenge")
             }
         }
 
-    suspend fun validateChallenge(challengeId: String): Unit =
+    suspend fun validateChallenge(challengeId: String, pin: String): Boolean =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
                 Log.d("PinService", "validateChallenge - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
+            val gson = Gson()
+            val requestBody = mapOf("pin" to pin)
+            val json = gson.toJson(requestBody)
 
             val request = Request.Builder()
-                .post("{}".toRequestBody(JSON))
+                .post(json.toRequestBody(JSON))
                 .url(buildUrl("challenges/${challengeId}/validate/"))
                 .build()
 
@@ -136,6 +134,16 @@ class PinService(private val httpClient: OkHttpClient, private val context: Cont
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         val responseBody = response.body.string()
+                        val jsonResponse = JSONObject(responseBody)
+                        // TODO improve this
+                        val backendErrorCode = jsonResponse.getString("code")
+                        Log.d("PinService", "validateChallenge - backendErrorCode: $backendErrorCode")
+                        if (backendErrorCode === "invalid-pin") {
+                            return@withContext false
+                        }
+                        if (backendErrorCode === "too-many-attempts") {
+                            throw IDDigitalError.SDKError.TooManyAttempts("too many pin attempts")
+                        }
                         throw when (response.code) {
                             in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
                                 response.code,
@@ -153,14 +161,9 @@ class PinService(private val httpClient: OkHttpClient, private val context: Cont
                             )
                         }
                     }
-                    return@withContext
+                    return@withContext true
                 }
             } catch (e: Throwable) {
-                if (e is ProtocolException) {
-                    // Ignore ProtocolException. This can happen with a 204 No Content
-                    // response that has an (incorrect) Content-Type: application/json header
-                    return@withContext
-                }
                 throw e.toIDDigitalError("Error in validateChallenge")
             }
         }

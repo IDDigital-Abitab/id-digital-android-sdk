@@ -12,7 +12,7 @@ class PinRepositoryImpl(private val pinService: PinService) : PinRepository {
         return pinService.executeChallenge(challengeId)
     }
 
-    override suspend fun validateChallenge(challengeId: String) {
-        return pinService.validateChallenge(challengeId)
+    override suspend fun validateChallenge(challengeId: String, pin: String): Boolean {
+        return pinService.validateChallenge(challengeId, pin)
     }
 }

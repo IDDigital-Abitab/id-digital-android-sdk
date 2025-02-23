@@ -23,13 +23,13 @@ fun ProcessingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White), // Fondo blanco
+            .background(Color.White),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(64.dp), // Tamaño del indicador
-            color = Color(0xFFEC0000)  // Color del indicador (rojo Abitab)
+            modifier = Modifier.size(64.dp),
+            color = Color(0xFFEC0000)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -41,7 +41,7 @@ fun ProcessingScreen() {
         Text(
             "Por favor, espere un momento",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray  // Color del texto secundario
+            color = Color.Gray
         )
     }
 }

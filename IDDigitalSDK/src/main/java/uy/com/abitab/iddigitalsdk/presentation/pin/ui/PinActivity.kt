@@ -1,6 +1,5 @@
-package uy.com.abitab.iddigitalsdk.presentation.liveness.ui
+package uy.com.abitab.iddigitalsdk.presentation.pin.ui
 
-import FaceLivenessComponent
 import LoadingScreen
 import android.content.Context
 import android.content.Intent
@@ -20,9 +19,6 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import uy.com.abitab.iddigitalsdk.CallbackHandler
 import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessCompletedLoadingScreen
-import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessInstructionsScreen
-import uy.com.abitab.iddigitalsdk.presentation.pin.ui.screens.PinCompletedLoadingScreen
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.screens.PinScreen
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.viewmodels.PinUiState
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.viewmodels.PinViewModel
@@ -66,6 +62,7 @@ class PinActivity : ComponentActivity() {
                             is PinUiState.Initial -> {
                                 setContent {
                                     LoadingScreen()
+                                    viewModel.createChallenge()
                                 }
                             }
 
@@ -89,19 +86,22 @@ class PinActivity : ComponentActivity() {
                                     "ChallengeExecuted: ${uiState.challengeId}"
                                 )
                                 setContent {
-                                    PinScreen(onCompleted = {}, onBack = { finish() })
+                                    PinScreen(onCompleted = { pin ->
+                                        viewModel.validateChallenge(uiState.challengeId, pin)
+                                    }, onBack = { finish() })
                                 }
                             }
 
-                            is PinUiState.ChallengeCompleted -> {
-                                Log.d(
-                                    "PinActivity",
-                                    "ChallengeCompleted: ${uiState.challengeId}"
-                                )
-                                setContent {
-                                    PinCompletedLoadingScreen()
+                            is PinUiState.ChallengeValidated -> {
+                                Log.d("PinActivity", "ChallengeValidated: ${uiState.challengeId}, result: ${uiState.isValid}")
+
+                                if (!uiState.isValid) {
+                                    setContent {
+                                        PinScreen(onCompleted = { pin ->
+                                            viewModel.validateChallenge(uiState.challengeId, pin)
+                                        }, onBack = { finish() }, hasError=true)
+                                    }
                                 }
-                                viewModel.validateChallenge(uiState.challengeId)
                             }
 
                             is PinUiState.Success -> {
@@ -124,18 +124,7 @@ class PinActivity : ComponentActivity() {
 
     private fun configureSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
         enableEdgeToEdge()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val controller = WindowInsetsControllerCompat(window, window.decorView)
-            controller.isAppearanceLightStatusBars = true
-
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-        }
     }
 
     companion object {
