@@ -7,24 +7,18 @@ import androidx.lifecycle.viewModelScope
 import com.amplifyframework.ui.liveness.model.FaceLivenessDetectionException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
-import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.domain.usecases.CreateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCase
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManagerInterface
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
 class LivenessViewModel(
     application: Application,
     private val permissionsManager: PermissionsManagerInterface,
-    private val createLivenessChallengeUseCase: CreateLivenessChallengeUseCase,
     private val executeLivenessChallengeUseCase: ExecuteLivenessChallengeUseCase,
     private val validateLivenessChallengeUseCase: ValidateLivenessChallengeUseCase
 
@@ -36,7 +30,7 @@ class LivenessViewModel(
     private val _uiState = MutableSharedFlow<LivenessUiState>(replay = 1)
     val uiState = _uiState.asSharedFlow()
 
-    private lateinit var document: Document
+    private lateinit var challengeId: String
     private var cameraPermissionRequested = false
 
 
@@ -54,26 +48,11 @@ class LivenessViewModel(
                 _permissionResultChannel.send(isGranted)
                 return@launch
             }
-            createChallenge()
+            executeChallenge()
         }
     }
 
-    private fun createChallenge() {
-        viewModelScope.launch {
-            Log.d("LivenessViewModel", "createChallenge")
-            val challengeId = try {
-                createLivenessChallengeUseCase(this@LivenessViewModel.document)
-            } catch (e: Throwable) {
-                Log.e("LivenessViewModel", "Error al crear el challenge", e)
-                val error = e.toIDDigitalError("Error creating challenge")
-                _uiState.emit(LivenessUiState.Error(error))
-                return@launch
-            }
-            _uiState.emit(LivenessUiState.ChallengeCreated(challengeId))
-        }
-    }
-
-    fun executeChallenge(challengeId: String) {
+    fun executeChallenge() {
         viewModelScope.launch {
             try {
                 val sessionId = executeLivenessChallengeUseCase(challengeId)
@@ -85,17 +64,28 @@ class LivenessViewModel(
         }
     }
 
-    fun validateChallenge(challengeId: String) {
+    fun validateChallenge() {
         viewModelScope.launch {
             try {
-                validateLivenessChallengeUseCase(challengeId)
-                _uiState.emit(LivenessUiState.Success(challengeId))
+                val isValid = try {
+                    validateLivenessChallengeUseCase(challengeId)
+                } catch (e: Throwable) {
+                    Log.e("PinViewModel", "Error al validar el challenge", e)
+                    val error = e.toIDDigitalError("Error validating challenge")
+                    _uiState.emit(LivenessUiState.Error(error))
+                    return@launch
+                }
+
+                if (!isValid) {
+                    _uiState.emit(LivenessUiState.ChallengeValidationError(challengeId))
+                } else {
+                    _uiState.emit(LivenessUiState.Success(challengeId))
+                }
             } catch (e: Throwable) {
                 _uiState.emit(LivenessUiState.Error(IDDigitalError.UnknownError("Error validating challenge: ${e.message}")))
                 return@launch
             }
         }
-
     }
 
     fun onPermissionResult(isGranted: Boolean) {
@@ -107,14 +97,12 @@ class LivenessViewModel(
                 _uiState.emit(LivenessUiState.Error(IDDigitalError.CameraPermissionError("Camera permission denied")))
                 return@launch
             }
-            createChallenge()
+            executeChallenge()
         }
     }
 
-    fun onLivenessCompleted(challengeId: String) {
-        viewModelScope.launch {
-            _uiState.emit(LivenessUiState.ChallengeCompleted(challengeId))
-        }
+    fun onLivenessCompleted() {
+        validateChallenge()
     }
 
     fun onLivenessError(error: FaceLivenessDetectionException) {
@@ -147,20 +135,19 @@ class LivenessViewModel(
         }
     }
 
-    fun setInitialState(document: Document){
-        this.document = document
+    fun setInitialState(challengeId: String) {
+        this.challengeId = challengeId
         viewModelScope.launch {
-            _uiState.emit(LivenessUiState.Initial(document))
+            _uiState.emit(LivenessUiState.Initial)
         }
     }
 }
 
 sealed class LivenessUiState {
-    data class Initial(val document: Document) : LivenessUiState()
+    object Initial : LivenessUiState()
     object Loading : LivenessUiState()
-    data class ChallengeCreated(val challengeId: String) : LivenessUiState()
     data class ChallengeExecuted(val challengeId: String, val sessionId: String) : LivenessUiState()
-    data class ChallengeCompleted(val challengeId: String) : LivenessUiState()
+    data class ChallengeValidationError(val challengeId: String) : LivenessUiState()
     data class Success(val challengeId: String) : LivenessUiState()
     data class Error(val error: IDDigitalError) : LivenessUiState()
 }

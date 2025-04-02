@@ -12,7 +12,7 @@ class LivenessRepositoryImpl(private val livenessService: LivenessService) : Liv
         return livenessService.executeChallenge(challengeId)
     }
 
-    override suspend fun validateChallenge(challengeId: String) {
+    override suspend fun validateChallenge(challengeId: String): Boolean {
         return livenessService.validateChallenge(challengeId)
     }
 }

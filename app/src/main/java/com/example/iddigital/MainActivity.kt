@@ -2,6 +2,8 @@ package com.example.iddigital
 
 import TransferDetailsScreen
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -28,6 +30,8 @@ import uy.com.abitab.iddigitalsdk.composables.AppTheme
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import java.io.IOException
+import java.security.MessageDigest
+import java.util.UUID
 
 enum class ChallegeType {
     PIN, LIVENESS;
@@ -38,7 +42,7 @@ class MainActivity : ComponentActivity() {
     private val httpClient = OkHttpClient.Builder().build()
     private lateinit var sdkInstance: IDDigitalSDK
 
-    private val methodToUse = ChallegeType.PIN
+    private val methodToUse = ChallegeType.LIVENESS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,18 +52,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MainScreen(onContinue = {
-                val validateMethod = getMethodForChallengeType(methodToUse)
-                validateMethod()
+                Log.d("MainActivity", "onContinue")
+                lifecycleScope.launch {
+                    val validateMethod = getMethodForChallengeType(methodToUse)
+                    Log.d("MainActivity", "validateMethod")
+                    validateMethod()
+                }
             })
         }
     }
 
-    private fun startPinChallenge() {
+    private suspend fun startPinChallenge() {
+        Log.d("MainActivity", "startPinChallenge")
         val document = Document(
             number = "45743055"
         )
         try {
-            sdkInstance.requestPin(this, document, onError = { error ->
+            sdkInstance.requestPin(document, onError = { error ->
                 handleIDDigitalSdkError(error)
             }, onCompleted = { challengeId ->
                 checkChallengeResult(challengeId)
@@ -69,20 +78,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startLivenessChallenge() {
+    private suspend fun startLivenessChallenge() {
+        Log.d("MainActivity", "startLivenessChallenge")
         val document = Document(
             number = "45743055"
         )
 
-        sdkInstance.startLiveness(this, document, onError = { error ->
+        sdkInstance.startLiveness(document, onError = { error ->
             handleIDDigitalSdkError(error)
         }, onCompleted = { challengeId ->
             checkChallengeResult(challengeId)
         })
     }
 
-    private fun getMethodForChallengeType(challengeType: ChallegeType): () -> Unit {
-        val methods = mapOf<ChallegeType, (() -> Unit)>(
+    private fun getMethodForChallengeType(challengeType: ChallegeType): suspend () -> Unit {
+        val methods = mapOf<ChallegeType, (suspend () -> Unit)>(
             ChallegeType.PIN to ::startPinChallenge,
             ChallegeType.LIVENESS to ::startLivenessChallenge
         )
@@ -144,6 +154,8 @@ class MainActivity : ComponentActivity() {
             is IDDigitalError.TimeoutError -> {
                 Toast.makeText(this, "Tiempo de espera agotado", Toast.LENGTH_SHORT).show()
             }
+
+            is IDDigitalError.SDKError.InvalidChallengeId -> TODO()
         }
     }
 
@@ -160,8 +172,11 @@ class MainActivity : ComponentActivity() {
                             SuccessScreen(onRetry = {
                                 setContent {
                                     MainScreen(onContinue = {
-                                        val validateMethod = getMethodForChallengeType(methodToUse)
-                                        validateMethod()
+                                        lifecycleScope.launch {
+                                            val validateMethod =
+                                                getMethodForChallengeType(methodToUse)
+                                            validateMethod()
+                                        }
                                     })
                                 }
                             })
@@ -169,8 +184,11 @@ class MainActivity : ComponentActivity() {
                             ErrorScreen(onRetry = {
                                 setContent {
                                     MainScreen(onContinue = {
-                                        val validateMethod = getMethodForChallengeType(methodToUse)
-                                        validateMethod()
+                                        lifecycleScope.launch {
+                                            val validateMethod =
+                                                getMethodForChallengeType(methodToUse)
+                                            validateMethod()
+                                        }
                                     })
                                 }
                             })

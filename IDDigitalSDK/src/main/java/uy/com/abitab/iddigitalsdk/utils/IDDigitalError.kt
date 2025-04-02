@@ -48,6 +48,7 @@ sealed class IDDigitalError(override val message: String, override val cause: Th
         data class NotInitialized(val reason: String) : SDKError("SDK not initialized: $reason")
         data class InvalidDocument(val reason: String) : SDKError("Invalid document: $reason")
         data class TooManyAttempts(val reason: String) : SDKError("Too many attempts: $reason")
+        data class InvalidChallengeId(val reason: String) : SDKError("Invalid challenge ID: $reason")
 
     }
 

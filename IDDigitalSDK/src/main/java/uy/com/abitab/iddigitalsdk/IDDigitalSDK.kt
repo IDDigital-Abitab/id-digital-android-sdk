@@ -1,15 +1,17 @@
 package uy.com.abitab.iddigitalsdk
 
 import android.content.Context
+import android.util.Log
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
-import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
-import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.LivenessActivity
-import uy.com.abitab.iddigitalsdk.domain.models.Document
+import org.koin.mp.KoinPlatform.getKoin
 import uy.com.abitab.iddigitalsdk.di.sdkModule
-import uy.com.abitab.iddigitalsdk.presentation.pin.ui.PinActivity
+import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.domain.usecases.CreateAndLaunchLivenessChallengeUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.CreateAndLaunchPinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
+import uy.com.abitab.iddigitalsdk.utils.PermissionsManager.registerPermissionLauncher
 
 class IDDigitalSDK private constructor(
     private val apiKey: String
@@ -23,10 +25,10 @@ class IDDigitalSDK private constructor(
         fun initialize(context: Context, apiKey: String): IDDigitalSDK {
             if (instance == null) {
                 applicationContext = context.applicationContext
+                startKoinIfNeeded(context)
                 instance = IDDigitalSDK(apiKey)
                 AmplifyInitializer.initialize(context)
                 registerPermissionLauncher(context)
-                startKoinIfNeeded(context)
             }
             return instance!!
         }
@@ -43,11 +45,10 @@ class IDDigitalSDK private constructor(
         internal fun getApiKey(): String {
             return instance?.apiKey
                 ?: throw IllegalStateException("IDDigitalSDK has not been initialized. Call initialize() first.")
-
         }
     }
 
-    fun startLiveness(
+    fun associateDevice(
         context: Context,
         document: Document,
         onError: (IDDigitalError) -> Unit,
@@ -55,13 +56,12 @@ class IDDigitalSDK private constructor(
     ) {
         CallbackHandler.setOnErrorHandler(onError)
         CallbackHandler.setOnCompletedHandler(onCompleted)
-
-        val intent = LivenessActivity.createIntent(context, document)
-        context.startActivity(intent)
+        // TODO
+        //        val intent = DeviceAssociationActivity.createIntent(context, document)
+        //        context.startActivity(intent)
     }
 
-    fun requestPin(
-        context: Context,
+    suspend fun startLiveness(
         document: Document,
         onError: (IDDigitalError) -> Unit,
         onCompleted: (String) -> Unit
@@ -69,15 +69,22 @@ class IDDigitalSDK private constructor(
         CallbackHandler.setOnErrorHandler(onError)
         CallbackHandler.setOnCompletedHandler(onCompleted)
 
-        val intent = PinActivity.createIntent(context, document)
-        context.startActivity(intent)
+        val createAndLaunchLivenessChallengeUseCase: CreateAndLaunchLivenessChallengeUseCase = getKoin().get()
+        createAndLaunchLivenessChallengeUseCase(document)
+    }
+
+    suspend fun requestPin(
+        document: Document,
+        onError: (IDDigitalError) -> Unit,
+        onCompleted: (String) -> Unit
+    ) {
+        CallbackHandler.setOnErrorHandler(onError)
+        CallbackHandler.setOnCompletedHandler(onCompleted)
+
+        val createAndLaunchPinChallengeUseCase: CreateAndLaunchPinChallengeUseCase = getKoin().get()
+        createAndLaunchPinChallengeUseCase(document)
     }
 }
-
-
-const val GENERIC_ERROR_MESSAGE = "Ha ocurrido un error"
-
-
 
 object CallbackHandler {
     private var onErrorHandler: ((IDDigitalError) -> Unit)? = null

@@ -7,16 +7,13 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
-import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.domain.usecases.CreatePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecutePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidatePinChallengeUseCase
+import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
 class PinViewModel(
     application: Application,
-    private val createPinChallengeUseCase: CreatePinChallengeUseCase,
     private val executePinChallengeUseCase: ExecutePinChallengeUseCase,
     private val validatePinChallengeUseCase: ValidatePinChallengeUseCase,
 
@@ -24,34 +21,18 @@ class PinViewModel(
     private val _uiState = MutableSharedFlow<PinUiState>(replay = 1)
     val uiState = _uiState.asSharedFlow()
 
-    private lateinit var document: Document
+    private lateinit var challengeId: String
 
     fun requestPin() {
         viewModelScope.launch {
             Log.d("PinViewModel", "Starting requestPin")
 
             _uiState.emit(PinUiState.Loading)
-
-            createChallenge()
+            executeChallenge()
         }
     }
 
-    fun createChallenge() {
-        viewModelScope.launch {
-            Log.d("PinViewModel", "createChallenge")
-            val challengeId = try {
-                createPinChallengeUseCase(this@PinViewModel.document)
-            } catch (e: Throwable) {
-                Log.e("PinViewModel", "Error al crear el challenge", e)
-                val error = e.toIDDigitalError("Error creating challenge")
-                _uiState.emit(PinUiState.Error(error))
-                return@launch
-            }
-            _uiState.emit(PinUiState.ChallengeCreated(challengeId))
-        }
-    }
-
-    fun executeChallenge(challengeId: String) {
+    fun executeChallenge() {
         viewModelScope.launch {
             try {
                 executePinChallengeUseCase(challengeId)
@@ -63,7 +44,7 @@ class PinViewModel(
         }
     }
 
-    fun validateChallenge(challengeId: String, pin: String) {
+    fun validateChallenge(pin: String) {
         viewModelScope.launch {
             try {
                 val isValid = try {
@@ -76,7 +57,7 @@ class PinViewModel(
                 }
 
                 if (!isValid) {
-                    _uiState.emit(PinUiState.ChallengeValidated(challengeId, isValid))
+                    _uiState.emit(PinUiState.ChallengeValidationError(challengeId))
                 }
                 else {
                     _uiState.emit(PinUiState.Success(challengeId))
@@ -93,20 +74,19 @@ class PinViewModel(
 
     }
 
-    fun setInitialState(document: Document){
-        this.document = document
+    fun setInitialState(challengeId: String){
+        this.challengeId = challengeId
         viewModelScope.launch {
-            _uiState.emit(PinUiState.Initial(document))
+            _uiState.emit(PinUiState.Initial)
         }
     }
 }
 
 sealed class PinUiState {
-    data class Initial(val document: Document) : PinUiState()
+    object Initial : PinUiState()
     object Loading : PinUiState()
-    data class ChallengeCreated(val challengeId: String) : PinUiState()
     data class ChallengeExecuted(val challengeId: String) : PinUiState()
-    data class ChallengeValidated(val challengeId: String, val isValid: Boolean) : PinUiState()
+    data class ChallengeValidationError(val challengeId: String) : PinUiState()
     data class Success(val challengeId: String) : PinUiState()
     data class Error(val error: IDDigitalError) : PinUiState()
 }

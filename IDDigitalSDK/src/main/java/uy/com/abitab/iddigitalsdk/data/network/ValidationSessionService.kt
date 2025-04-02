@@ -1,7 +1,11 @@
 package uy.com.abitab.iddigitalsdk.data.network
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -14,8 +18,10 @@ import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.NetworkUtils
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
+import java.security.MessageDigest
+import java.util.UUID
 
-class LivenessService(private val httpClient: OkHttpClient, private val context: Context) {
+class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
     private fun buildUrl(path: String): String {
@@ -23,16 +29,70 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
         return "$baseUrl/$path"
     }
 
-    suspend fun createChallenge(document: Document): String =
+
+
+//    suspend fun createChallenge(document: Document): String =
+//        withContext(Dispatchers.IO) {
+//            if (!NetworkUtils.isInternetAvailable(context)) {
+//                throw IDDigitalError.NetworkError.NoInternetConnection
+//            }
+//
+//            val data = mapOf(
+//                "documentNumber" to document.number,
+//                "documentType" to (document.type ?: "ci"),
+//                "documentCountry" to (document.country ?: "UY")
+//            )
+//
+//            val jsonObject = JSONObject(data)
+//            val requestBody = jsonObject.toString().toRequestBody(JSON)
+//
+//            val request = Request.Builder()
+//                .post(requestBody)
+//                .url(buildUrl("challenges/pin/"))
+//                .build()
+//
+//            try {
+//                httpClient.newCall(request).execute().use { response ->
+//                    val responseBody = response.body.string()
+//                    if (!response.isSuccessful) {
+//                        throw when (response.code) {
+//                            in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
+//                                response.code,
+//                                responseBody
+//                            )
+//
+//                            400, 404 -> IDDigitalError.ServerError.BadResponse(
+//                                response.code,
+//                                responseBody
+//                            )
+//
+//                            else -> IDDigitalError.ServerError.UnexpectedResponse(
+//                                response.code,
+//                                responseBody
+//                            )
+//                        }
+//                    }
+//                    val json = JSONObject(responseBody)
+//                    val dataObject = json.getJSONObject("data")
+//                    return@withContext dataObject.getString("challengeId")
+//                }
+//            } catch (e: Throwable) {
+//                throw e.toIDDigitalError("Error in createChallenge")
+//            }
+//        }
+
+
+    suspend fun createDeviceAssociation(document: Document): Unit =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
+                Log.d("ValidationSessionService", "createDeviceAssociation - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
 
             val data = mapOf(
-                "documentNumber" to document.number,
-                "documentType" to (document.type ?: "ci"),
-                "documentCountry" to (document.country ?: "UY")
+                "document_number" to document.number,
+                "document_type" to (document.type ?: "ci"),
+                "document_country" to (document.country ?: "UY")
             )
 
             val jsonObject = JSONObject(data)
@@ -40,7 +100,7 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
 
             val request = Request.Builder()
                 .post(requestBody)
-                .url(buildUrl("challenges/liveness/"))
+                .url(buildUrl("associations/"))
                 .build()
 
             try {
@@ -52,36 +112,33 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
                                 response.code,
                                 responseBody
                             )
-
                             400, 404 -> IDDigitalError.ServerError.BadResponse(
                                 response.code,
                                 responseBody
                             )
-
                             else -> IDDigitalError.ServerError.UnexpectedResponse(
                                 response.code,
                                 responseBody
                             )
                         }
                     }
-                    val json = JSONObject(responseBody)
-                    val dataObject = json.getJSONObject("data")
-                    return@withContext dataObject.getString("challengeId")
+
+                    return@withContext
                 }
             } catch (e: Throwable) {
-                throw e.toIDDigitalError("Error in createChallenge")
+                throw e.toIDDigitalError("Error in createDeviceAssociation")
             }
         }
 
-    suspend fun executeChallenge(challengeId: String): String =
+    suspend fun executeChallenge(challengeId: String, data: Record): Unit =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
-                Log.d("LivenessService", "executeChallenge - No internet connection")
+                Log.d("ValidationSessionService", "executeChallenge - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
 
             val request = Request.Builder()
-                .post("{}".toRequestBody(JSON))
+                .post("$data".toRequestBody(JSON)) // Check if this works well
                 .url(buildUrl("challenges/${challengeId}/execute/"))
                 .build()
 
@@ -107,24 +164,24 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
                         }
                     }
 
-                    val json = JSONObject(responseBody)
-                    val dataObject = json.getJSONObject("data")
-                    return@withContext dataObject.getString("sessionId")
+                    return@withContext
                 }
             } catch (e: Throwable) {
                 throw e.toIDDigitalError("Error in executeChallenge")
             }
         }
 
-    suspend fun validateChallenge(challengeId: String): Boolean =
+    suspend fun validateChallenge(challengeId: String, data: Record): Boolean =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
-                Log.d("LivenessService", "validateChallenge - No internet connection")
+                Log.d("ValidationSessionService", "validateChallenge - No internet connection")
                 throw IDDigitalError.NetworkError.NoInternetConnection
             }
+            val gson = Gson()
+            val json = gson.toJson(data)
 
             val request = Request.Builder()
-                .post("{}".toRequestBody(JSON))
+                .post(json.toRequestBody(JSON))
                 .url(buildUrl("challenges/${challengeId}/validate/"))
                 .build()
 
@@ -132,10 +189,16 @@ class LivenessService(private val httpClient: OkHttpClient, private val context:
                 httpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         val responseBody = response.body.string()
-
-                        if (response.code == 401)
+                        val jsonResponse = JSONObject(responseBody)
+                        // TODO improve this
+                        val backendErrorCode = jsonResponse.getString("code")
+                        Log.d("ValidationSessionService", "validateChallenge - backendErrorCode: $backendErrorCode")
+                        if (backendErrorCode === "invalid-pin") {
                             return@withContext false
-
+                        }
+                        if (backendErrorCode === "too-many-attempts") {
+                            throw IDDigitalError.SDKError.TooManyAttempts("too many attempts")
+                        }
                         throw when (response.code) {
                             in 500..599 -> IDDigitalError.ServerError.ServiceUnavailable(
                                 response.code,

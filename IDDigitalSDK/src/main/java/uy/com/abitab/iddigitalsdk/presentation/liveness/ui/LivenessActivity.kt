@@ -4,23 +4,19 @@ import FaceLivenessComponent
 import LoadingScreen
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.Text
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import uy.com.abitab.iddigitalsdk.CallbackHandler
-import uy.com.abitab.iddigitalsdk.domain.models.Document
-import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessCompletedLoadingScreen
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessInstructionsScreen
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessUiState
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.viewmodels.LivenessViewModel
@@ -35,15 +31,11 @@ class LivenessActivity : ComponentActivity() {
 
         configureSystemUI()
 
-        val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
-        } else {
-            @Suppress("DEPRECATION") intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
-        }
+        val challengeId = intent.getStringExtra(EXTRA_CHALLENGE_ID)
 
-        if (document == null) {
+        if (challengeId == null) {
             CallbackHandler.onError(
-                IDDigitalError.SDKError.InvalidDocument("Document is null")
+                IDDigitalError.SDKError.InvalidChallengeId("Challenge ID is null")
             )
             finish()
             return
@@ -51,7 +43,7 @@ class LivenessActivity : ComponentActivity() {
 
         registerPermissionLauncher(this)
 
-        viewModel.setInitialState(document)
+        viewModel.setInitialState(challengeId)
         observeViewModel()
     }
 
@@ -75,31 +67,18 @@ class LivenessActivity : ComponentActivity() {
                                 }
                             }
 
-                            is LivenessUiState.ChallengeCreated -> {
-                                Log.d(
-                                    "LivenessActivity",
-                                    "ChallengeCreated: ${uiState.challengeId}"
-                                )
-                                viewModel.executeChallenge(uiState.challengeId)
-                            }
-
                             is LivenessUiState.ChallengeExecuted -> {
                                 Log.d(
-                                    "LivenessActivity",
-                                    "ChallengeExecuted: ${uiState.challengeId}"
+                                    "LivenessActivity", "ChallengeExecuted: ${uiState.challengeId}"
                                 )
-                                startFaceLivenessDetector(uiState.challengeId, uiState.sessionId)
+                                startFaceLivenessDetector(uiState.sessionId)
                             }
 
-                            is LivenessUiState.ChallengeCompleted -> {
-                                Log.d(
-                                    "LivenessActivity",
-                                    "ChallengeCompleted: ${uiState.challengeId}"
-                                )
+                            is LivenessUiState.ChallengeValidationError -> {
                                 setContent {
-                                    LivenessCompletedLoadingScreen()
+                                    // @TODO: Handle invalid liveness
+                                    Text("Invalid liveness")
                                 }
-                                viewModel.validateChallenge(uiState.challengeId)
                             }
 
                             is LivenessUiState.Success -> {
@@ -113,6 +92,8 @@ class LivenessActivity : ComponentActivity() {
                                 CallbackHandler.onError(uiState.error)
                                 finish()
                             }
+
+                            else -> {}
                         }
                     }
                 }
@@ -130,37 +111,28 @@ class LivenessActivity : ComponentActivity() {
         enableEdgeToEdge()
     }
 
-    private fun startFaceLivenessDetector(challengeId: String, sessionId: String) {
+    private fun startFaceLivenessDetector(sessionId: String) {
         lifecycleScope.launch {
-
-                setContent {
-                    FaceLivenessComponent(
-                        sessionId = sessionId,
-                        onComplete = {
-                            viewModel.onLivenessCompleted(challengeId)
-                        },
-                        onError = { error ->
-                            viewModel.onLivenessError(error)
-                        }
-                    )
-
-
-                }
-
+            setContent {
+                FaceLivenessComponent(sessionId = sessionId, onComplete = {
+                    viewModel.onLivenessCompleted()
+                }, onError = { error ->
+                    viewModel.onLivenessError(error)
+                })
+            }
         }
     }
 
 
     companion object {
-        private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
+        private const val EXTRA_CHALLENGE_ID = "EXTRA_CHALLENGE_ID"
 
         fun createIntent(
             context: Context,
-            document: Document,
-
-            ): Intent {
+            challengeId: String,
+        ): Intent {
             return Intent(context, LivenessActivity::class.java).apply {
-                putExtra(EXTRA_DOCUMENT, document)
+                putExtra(EXTRA_CHALLENGE_ID, challengeId)
             }
         }
     }

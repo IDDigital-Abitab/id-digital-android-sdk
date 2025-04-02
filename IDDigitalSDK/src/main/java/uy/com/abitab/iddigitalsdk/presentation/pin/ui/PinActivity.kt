@@ -3,22 +3,18 @@ package uy.com.abitab.iddigitalsdk.presentation.pin.ui
 import LoadingScreen
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import uy.com.abitab.iddigitalsdk.CallbackHandler
-import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.screens.PinScreen
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.viewmodels.PinUiState
 import uy.com.abitab.iddigitalsdk.presentation.pin.ui.viewmodels.PinViewModel
@@ -33,15 +29,11 @@ class PinActivity : ComponentActivity() {
 
         configureSystemUI()
 
-        val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
-        } else {
-            @Suppress("DEPRECATION") intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
-        }
+        val challengeId = intent.getStringExtra(EXTRA_CHALLENGE_ID)
 
-        if (document == null) {
+        if (challengeId == null) {
             CallbackHandler.onError(
-                IDDigitalError.SDKError.InvalidDocument("Document is null")
+                IDDigitalError.SDKError.InvalidChallengeId("Challenge ID is null")
             )
             finish()
             return
@@ -49,7 +41,7 @@ class PinActivity : ComponentActivity() {
 
         registerPermissionLauncher(this)
 
-        viewModel.setInitialState(document)
+        viewModel.setInitialState(challengeId)
         observeViewModel()
     }
 
@@ -62,7 +54,7 @@ class PinActivity : ComponentActivity() {
                             is PinUiState.Initial -> {
                                 setContent {
                                     LoadingScreen()
-                                    viewModel.createChallenge()
+                                    viewModel.requestPin()
                                 }
                             }
 
@@ -72,14 +64,6 @@ class PinActivity : ComponentActivity() {
                                 }
                             }
 
-                            is PinUiState.ChallengeCreated -> {
-                                Log.d(
-                                    "PinActivity",
-                                    "ChallengeCreated: ${uiState.challengeId}"
-                                )
-                                viewModel.executeChallenge(uiState.challengeId)
-                            }
-
                             is PinUiState.ChallengeExecuted -> {
                                 Log.d(
                                     "PinActivity",
@@ -87,20 +71,20 @@ class PinActivity : ComponentActivity() {
                                 )
                                 setContent {
                                     PinScreen(onCompleted = { pin ->
-                                        viewModel.validateChallenge(uiState.challengeId, pin)
+                                        viewModel.validateChallenge(pin)
                                     }, onBack = { finish() })
                                 }
                             }
 
-                            is PinUiState.ChallengeValidated -> {
-                                Log.d("PinActivity", "ChallengeValidated: ${uiState.challengeId}, result: ${uiState.isValid}")
-
-                                if (!uiState.isValid) {
-                                    setContent {
-                                        PinScreen(onCompleted = { pin ->
-                                            viewModel.validateChallenge(uiState.challengeId, pin)
-                                        }, onBack = { finish() }, hasError=true)
-                                    }
+                            is PinUiState.ChallengeValidationError -> {
+                                Log.d(
+                                    "PinActivity",
+                                    "ChallengeValidationError: ${uiState.challengeId}"
+                                )
+                                setContent {
+                                    PinScreen(onCompleted = { pin ->
+                                        viewModel.validateChallenge(pin)
+                                    }, onBack = { finish() }, hasError = true)
                                 }
                             }
 
@@ -128,16 +112,14 @@ class PinActivity : ComponentActivity() {
     }
 
     companion object {
-
-        private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
+        private const val EXTRA_CHALLENGE_ID = "EXTRA_CHALLENGE_ID"
 
         fun createIntent(
             context: Context,
-            document: Document,
-
-            ): Intent {
+            challengeId: String,
+        ): Intent {
             return Intent(context, PinActivity::class.java).apply {
-                putExtra(EXTRA_DOCUMENT, document)
+                putExtra(EXTRA_CHALLENGE_ID, challengeId)
             }
         }
     }
