@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "uy.com.abitab.iddigitalsdk";
+option java_multiple_files = true;
+
+message DocumentProto {
+  string number = 1;
+  string type = 2;
+  string country = 3;
+}
+
+message DeviceAssociationProto {
+  string token = 1;
+  DocumentProto document = 2;
+  string created_at = 3;
+}
