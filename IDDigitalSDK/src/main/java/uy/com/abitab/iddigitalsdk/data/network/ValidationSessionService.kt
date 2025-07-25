@@ -9,7 +9,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.internal.EMPTY_REQUEST
 import org.json.JSONObject
 import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.CanAssociate
@@ -25,6 +24,8 @@ import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.TooManyAttemptsError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
+
+val EMPTY_REQUEST_BODY = ByteArray(0).toRequestBody()
 
 class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context) {
     private val JSON = "application/json; charset=utf-8".toMediaType()
@@ -139,7 +140,7 @@ class ValidationSessionService(private val httpClient: OkHttpClient, private val
             }
 
             val request =
-                Request.Builder().post(EMPTY_REQUEST).url(buildUrl("associations/$id/")).build()
+                Request.Builder().post(EMPTY_REQUEST_BODY).url(buildUrl("associations/$id/")).build()
 
             try {
                 httpClient.newCall(request).execute().use { response ->
