@@ -9,6 +9,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.dsl.module
 import uy.com.abitab.iddigitalsdk.data.PinDataStoreManager
+import uy.com.abitab.iddigitalsdk.data.network.ConfigService
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
 import uy.com.abitab.iddigitalsdk.data.network.PinService
 import uy.com.abitab.iddigitalsdk.data.network.ValidationSessionService
@@ -74,6 +75,7 @@ internal fun sdkModule() = module {
     single { LivenessService(get(), get()) }
     single { PinService(get(), get()) }
     single { ValidationSessionService(get(), get()) }
+    single { ConfigService(get(), get()) }
 
     // --- REPOSITORIES ---
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }

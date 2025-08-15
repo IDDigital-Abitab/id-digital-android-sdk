@@ -45,12 +45,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val apiKey = BuildConfig.API_KEY
-        sdkInstance = IDDigitalSDK.initialize(this, apiKey)
+        try {
+            sdkInstance = IDDigitalSDK.initialize(this, apiKey, onError = {}, onCompleted = {})
 
-        setContent {
-            MainScreen(
-                sdkInstance = sdkInstance
-            )
+            setContent {
+                MainScreen(
+                    sdkInstance = sdkInstance
+                )
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error initializing IDDigitalSDK: ${e.message}", Toast.LENGTH_LONG)
+                .show()
+            e.printStackTrace()
         }
     }
 

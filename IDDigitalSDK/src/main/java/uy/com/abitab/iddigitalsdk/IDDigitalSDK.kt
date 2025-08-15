@@ -3,7 +3,10 @@ package uy.com.abitab.iddigitalsdk
 import android.content.Context
 import android.util.Log
 import getDeviceAssociation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.Koin
@@ -44,7 +47,7 @@ class IDDigitalSDK private constructor() {
         private lateinit var applicationContext: Context
         private lateinit var koinInstance: Koin
 
-        fun initialize(context: Context, apiKey: String): IDDigitalSDK {
+        fun initialize(context: Context, apiKey: String, onError: (IDDigitalError) -> Unit, onCompleted: (String) -> Unit): IDDigitalSDK {
             if (instance == null) {
                 applicationContext = context.applicationContext
                 if (!isKoinStarted) {
@@ -57,8 +60,18 @@ class IDDigitalSDK private constructor() {
                     isKoinStarted = true
                 }
                 instance = IDDigitalSDK()
-                AmplifyInitializer.initialize(context)
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        AmplifyInitializer.initialize(context)
+                    } catch (e: Throwable) {
+                        onError(e.toIDDigitalError())
+                    }
+                }
+
                 registerPermissionLauncher(context)
+
+                onCompleted("IDDigitalSDK initialized successfully")
             }
             return instance!!
         }
