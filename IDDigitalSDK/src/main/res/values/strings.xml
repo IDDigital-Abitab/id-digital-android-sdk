@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="amplify_ui_liveness_get_ready_center_face_label">Centrá tu cara</string>
+    <string name="amplify_ui_liveness_get_ready_photosensitivity_title">Advertencia de fotosensibilidad</string>
+    <string name="amplify_ui_liveness_get_ready_photosensitivity_description">Esta verificación utiliza destellos de colores. Utilizala con cuidado si sos fotosensible.</string>
+    <string name="amplify_ui_liveness_get_ready_a11y_photosensitivity_icon_content_description">Información de fotosensibilidad</string>
+    <string name="amplify_ui_liveness_get_ready_photosensitivity_dialog_title">Advertencia de fotosensibilidad</string>
+    <string name="amplify_ui_liveness_get_ready_photosensitivity_dialog_description">Algunas personas pueden sufrir ataques epilépticos cuando se exponen a luces de colores. Tené cuidado si vos o algún miembro de tu familia padecen una afección epiléptica.</string>
+    <string name="amplify_ui_liveness_get_ready_photosensitivity_dialog_dismiss">Entendido</string>
+    <string name="amplify_ui_liveness_get_ready_begin_check">Comenzar verificación</string>
+    <string name="amplify_ui_liveness_challenge_recording_indicator_label">REC</string>
+    <string name="amplify_ui_liveness_challenge_instruction_hold_face_during_freshness">Mantente quieto</string>
+    <string name="amplify_ui_liveness_challenge_instruction_move_face_further">Alejate</string>
+    <string name="amplify_ui_liveness_challenge_instruction_move_face_closer">Acercate</string>
+    <string name="amplify_ui_liveness_challenge_instruction_move_face">Colocá tu cara frente a la cámara</string>
+    <string name="amplify_ui_liveness_challenge_instruction_multiple_faces_detected">Solo una cara por verificación</string>
+    <string name="amplify_ui_liveness_challenge_connecting">Conectando</string>
+    <string name="amplify_ui_liveness_challenge_verifying">Verificando</string>
+    <string name="amplify_ui_liveness_challenge_a11y_cancel_content_description">Cancelar verificación</string>
+</resources>
