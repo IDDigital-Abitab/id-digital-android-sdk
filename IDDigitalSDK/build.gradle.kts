@@ -29,7 +29,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        buildConfigField("String", "ID_DIGITAL_BASE_URL", "\"https://auth.identificaciondigital.com.uy/api/v2/sdk\"")
     }
 
     buildTypes {

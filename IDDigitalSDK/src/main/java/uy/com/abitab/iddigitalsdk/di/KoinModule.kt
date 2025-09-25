@@ -75,7 +75,7 @@ internal fun sdkModule() = module {
     single { LivenessService(get(), get()) }
     single { PinService(get(), get()) }
     single { ValidationSessionService(get(), get()) }
-    single { ConfigService(get(), get()) }
+    single { ConfigService(get()) }
 
     // --- REPOSITORIES ---
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }

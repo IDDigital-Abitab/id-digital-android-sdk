@@ -17,6 +17,7 @@ import uy.com.abitab.iddigitalsdk.data.PinDataStoreManager
 import uy.com.abitab.iddigitalsdk.di.sdkModule
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 import uy.com.abitab.iddigitalsdk.domain.usecases.CheckCanAssociateUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.RemoveAssociationUseCase
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.DeviceAssociationActivity
@@ -47,14 +48,25 @@ class IDDigitalSDK private constructor() {
         private lateinit var applicationContext: Context
         private lateinit var koinInstance: Koin
 
-        fun initialize(context: Context, apiKey: String, onError: (IDDigitalError) -> Unit, onCompleted: (String) -> Unit): IDDigitalSDK {
+        fun initialize(
+            context: Context,
+            apiKey: String,
+            environment: IDDigitalSDKEnvironment,
+            onError: (IDDigitalError) -> Unit,
+            onCompleted: (String) -> Unit
+        ): IDDigitalSDK {
             if (instance == null) {
                 applicationContext = context.applicationContext
                 if (!isKoinStarted) {
                     val koinApp = startKoin {
                         androidContext(context.applicationContext)
                         modules(sdkModule())
-                        properties(mapOf("apiKey" to apiKey))
+                        properties(
+                            mapOf(
+                                "apiKey" to apiKey,
+                                "environment" to environment.name
+                            )
+                        )
                     }
                     koinInstance = koinApp.koin
                     isKoinStarted = true
@@ -121,9 +133,9 @@ class IDDigitalSDK private constructor() {
 
     suspend fun removeAssociation() {
         val context = applicationContext
-        try{
+        try {
             removeAssociationUseCase()
-        } catch (e: Throwable){
+        } catch (e: Throwable) {
             Log.e("IDDigitalSDK", "Error removing association", e)
         }
         runBlocking {

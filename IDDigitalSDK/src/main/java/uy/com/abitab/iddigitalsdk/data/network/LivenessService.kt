@@ -3,12 +3,10 @@ package uy.com.abitab.iddigitalsdk.data.network
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.utils.BadResponseError
 import uy.com.abitab.iddigitalsdk.utils.NetworkUtils
@@ -17,14 +15,7 @@ import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-class LivenessService(private val httpClient: OkHttpClient, private val context: Context) {
-    private val JSON = "application/json; charset=utf-8".toMediaType()
-
-    private fun buildUrl(path: String): String {
-        val baseUrl = BuildConfig.ID_DIGITAL_BASE_URL.trimEnd('/')
-        return "$baseUrl/$path"
-    }
-
+class LivenessService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
