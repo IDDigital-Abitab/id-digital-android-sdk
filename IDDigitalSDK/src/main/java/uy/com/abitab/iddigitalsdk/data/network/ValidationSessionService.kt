@@ -5,12 +5,10 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import uy.com.abitab.iddigitalsdk.BuildConfig
 import uy.com.abitab.iddigitalsdk.domain.models.CanAssociate
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
@@ -25,16 +23,7 @@ import uy.com.abitab.iddigitalsdk.utils.TooManyAttemptsError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-val EMPTY_REQUEST_BODY = ByteArray(0).toRequestBody()
-
-class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context) {
-    private val JSON = "application/json; charset=utf-8".toMediaType()
-
-    private fun buildUrl(path: String): String {
-        val baseUrl = BuildConfig.ID_DIGITAL_BASE_URL.trimEnd('/')
-        return "$baseUrl/$path"
-    }
-
+class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
     suspend fun checkCanAssociate(document: Document): Boolean = withContext(Dispatchers.IO) {
         try {
             if (!NetworkUtils.isInternetAvailable(context)) {

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 import uy.com.abitab.iddigitalsdk.utils.BadResponseError
 import uy.com.abitab.iddigitalsdk.utils.CameraPermissionError
 import uy.com.abitab.iddigitalsdk.utils.ChallengeValidationError
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
         val apiKey = BuildConfig.API_KEY
         try {
-            sdkInstance = IDDigitalSDK.initialize(this, apiKey, onError = {}, onCompleted = {})
+            sdkInstance = IDDigitalSDK.initialize(this, apiKey, environment = IDDigitalSDKEnvironment.STAGING, onError = {}, onCompleted = {})
 
             setContent {
                 MainScreen(
