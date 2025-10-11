@@ -10,6 +10,6 @@ data class ValidationSession(
     val payload: Map<String, Any>
 )
 
-data class DeviceAssociation(val token: String, val document: Document, val createdAt: String)
+data class DeviceAssociation(val token: String, val document: Document, val createdAt: String, val idToken: String)
 
 data class CanAssociate(val canAssociate: Boolean)
