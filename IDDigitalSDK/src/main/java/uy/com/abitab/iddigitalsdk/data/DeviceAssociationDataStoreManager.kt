@@ -63,7 +63,8 @@ fun Context.getDeviceAssociation(): Flow<DeviceAssociation?> {
                     number = associationProto.document.number,
                     country = associationProto.document.country
                 ),
-                createdAt = associationProto.createdAt
+                createdAt = associationProto.createdAt,
+                idToken = associationProto.idToken
             )
         }
     }

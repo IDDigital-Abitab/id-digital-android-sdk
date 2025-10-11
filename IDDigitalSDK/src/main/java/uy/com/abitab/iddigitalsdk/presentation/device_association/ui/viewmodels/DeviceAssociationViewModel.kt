@@ -91,7 +91,7 @@ class DeviceAssociationViewModel(
 
         context.saveDeviceAssociation(deviceAssociation)
         viewModelScope.launch {
-            _uiState.emit(DeviceAssociationUiState.Success)
+            _uiState.emit(DeviceAssociationUiState.Success(deviceAssociation.idToken))
         }
     }
 
@@ -200,6 +200,6 @@ sealed class DeviceAssociationUiState {
     data class LaunchChallenge(val challenge: Challenge, val isRetry: Boolean = false) :
         DeviceAssociationUiState()
 
-    object Success : DeviceAssociationUiState()
+    data class Success(val idToken: String) : DeviceAssociationUiState()
     data class Error(val error: IDDigitalError) : DeviceAssociationUiState()
 }

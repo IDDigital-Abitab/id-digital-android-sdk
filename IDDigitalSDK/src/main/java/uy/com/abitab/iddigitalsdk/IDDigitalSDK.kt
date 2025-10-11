@@ -174,7 +174,7 @@ object CallbackHandler {
         onErrorHandler?.invoke(error)
     }
 
-    fun onCompleted(challengeId: String) {
-        onCompletedHandler?.invoke(challengeId)
+    fun onCompleted(value: String) {
+        onCompletedHandler?.invoke(value)
     }
 }

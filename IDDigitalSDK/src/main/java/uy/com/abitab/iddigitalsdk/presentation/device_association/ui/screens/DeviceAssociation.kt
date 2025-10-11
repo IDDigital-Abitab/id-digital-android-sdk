@@ -61,7 +61,8 @@ fun DeviceAssociation(document: Document, context: Context, onClose: () -> Unit)
             }
 
             is DeviceAssociationUiState.Success -> {
-                CallbackHandler.onCompleted("Device association successful")
+                val idToken = (uiState as DeviceAssociationUiState.Success).idToken
+                CallbackHandler.onCompleted(idToken)
                 (context as? Activity)?.finish()
             }
 

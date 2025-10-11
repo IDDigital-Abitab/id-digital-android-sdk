@@ -13,4 +13,5 @@ message DeviceAssociationProto {
   string token = 1;
   DocumentProto document = 2;
   string created_at = 3;
+  string id_token = 4;
 }
