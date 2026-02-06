@@ -30,6 +30,9 @@ object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
     }
 }
 
+// TODO: Remover cuando el backend envíe idToken correctamente
+private const val TEMP_ID_TOKEN = "TEMP_ID_TOKEN_PENDING_BACKEND"
+
 val Context.deviceAssociationStore: DataStore<DeviceAssociationProto> by dataStore(
     fileName = "device_association.pb",
     serializer = DeviceAssociationSerializer
@@ -47,6 +50,7 @@ suspend fun Context.saveDeviceAssociation(deviceAssociation: DeviceAssociation) 
             .setToken(deviceAssociation.token)
             .setDocument(documentProto)
             .setCreatedAt(deviceAssociation.createdAt)
+            .setIdToken(deviceAssociation.idToken ?: TEMP_ID_TOKEN)
             .build()
     }
 }

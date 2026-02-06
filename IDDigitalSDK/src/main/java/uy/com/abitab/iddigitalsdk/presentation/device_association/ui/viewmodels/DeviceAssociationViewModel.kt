@@ -91,7 +91,9 @@ class DeviceAssociationViewModel(
 
         context.saveDeviceAssociation(deviceAssociation)
         viewModelScope.launch {
-            _uiState.emit(DeviceAssociationUiState.Success(deviceAssociation.idToken))
+            // TODO: Remover cuando el backend envíe idToken correctamente
+            val idToken = deviceAssociation.idToken ?: "TEMP_ID_TOKEN_PENDING_BACKEND"
+            _uiState.emit(DeviceAssociationUiState.Success(idToken))
         }
     }
 
