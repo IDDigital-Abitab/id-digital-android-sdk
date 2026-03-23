@@ -13,7 +13,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "uy.com.abitab"
                 artifactId = "iddigitalsdk"
-                version = "0.0.1"
+                version = "1.0.0"
             }
         }
     }
