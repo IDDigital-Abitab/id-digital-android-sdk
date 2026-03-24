@@ -10,6 +10,12 @@ data class ValidationSession(
     val payload: Map<String, Any>
 )
 
-data class DeviceAssociation(val token: String, val document: Document, val createdAt: String)
+/** [idToken] is the OIDC ID Token (JWT) when the backend client has an active secret; null otherwise. */
+data class DeviceAssociation(
+    val token: String,
+    val document: Document,
+    val createdAt: String,
+    val idToken: String?,
+)
 
 data class CanAssociate(val canAssociate: Boolean)

@@ -91,7 +91,9 @@ class DeviceAssociationViewModel(
 
         context.saveDeviceAssociation(deviceAssociation)
         viewModelScope.launch {
-            _uiState.emit(DeviceAssociationUiState.Success)
+            // Empty string when backend omits idToken (e.g. client without active secret).
+            val idToken = deviceAssociation.idToken.orEmpty()
+            _uiState.emit(DeviceAssociationUiState.Success(idToken))
         }
     }
 
@@ -200,6 +202,6 @@ sealed class DeviceAssociationUiState {
     data class LaunchChallenge(val challenge: Challenge, val isRetry: Boolean = false) :
         DeviceAssociationUiState()
 
-    object Success : DeviceAssociationUiState()
+    data class Success(val idToken: String) : DeviceAssociationUiState()
     data class Error(val error: IDDigitalError) : DeviceAssociationUiState()
 }

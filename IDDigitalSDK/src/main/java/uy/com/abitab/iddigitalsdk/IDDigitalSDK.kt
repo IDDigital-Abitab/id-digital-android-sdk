@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import getDeviceAssociation
 import kotlinx.coroutines.CoroutineScope
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -16,10 +17,15 @@ import removeDeviceAssociation
 import uy.com.abitab.iddigitalsdk.data.PinDataStoreManager
 import uy.com.abitab.iddigitalsdk.di.sdkModule
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
+import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
+import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.usecases.CheckCanAssociateUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.CreateValidationSessionUseCase
+// import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.RemoveAssociationUseCase
+// import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateChallengeUseCase
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.DeviceAssociationActivity
 import uy.com.abitab.iddigitalsdk.presentation.validation_session.ui.ValidationSessionActivity
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
@@ -32,6 +38,9 @@ class IDDigitalSDK private constructor() {
     private var checkCanAssociateUseCase: CheckCanAssociateUseCase
     private var removeAssociationUseCase: RemoveAssociationUseCase
     private var pinDataStoreManager: PinDataStoreManager
+    private var createValidationSessionUseCase: CreateValidationSessionUseCase
+//    private var executeChallengeUseCase: ExecuteChallengeUseCase
+//    private var validateChallengeUseCase: ValidateChallengeUseCase
 
     private val koin by lazy { GlobalContext.get() }
 
@@ -39,6 +48,9 @@ class IDDigitalSDK private constructor() {
         checkCanAssociateUseCase = koin.get()
         removeAssociationUseCase = koin.get()
         pinDataStoreManager = koin.get()
+        createValidationSessionUseCase = koin.get()
+//        executeChallengeUseCase = koin.get()
+//        validateChallengeUseCase = koin.get()
     }
 
 
@@ -76,6 +88,7 @@ class IDDigitalSDK private constructor() {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         AmplifyInitializer.initialize(context)
+                        onCompleted("IDDigitalSDK initialized successfully")
                     } catch (e: Throwable) {
                         onError(e.toIDDigitalError())
                     }
@@ -83,7 +96,6 @@ class IDDigitalSDK private constructor() {
 
                 registerPermissionLauncher(context)
 
-                onCompleted("IDDigitalSDK initialized successfully")
             }
             return instance!!
         }
@@ -131,6 +143,19 @@ class IDDigitalSDK private constructor() {
         return retrievedAssociation != null
     }
 
+    suspend fun getDeviceAssociation(
+        onError: (IDDigitalError) -> Unit,
+        onSuccess: (DeviceAssociation?) -> Unit
+    ) {
+        try {
+            val context = applicationContext
+            val association = context.getDeviceAssociation().firstOrNull()
+            onSuccess(association)
+        } catch (e: Throwable) {
+            onError(e.toIDDigitalError())
+        }
+    }
+
     suspend fun removeAssociation() {
         val context = applicationContext
         try {
@@ -156,6 +181,55 @@ class IDDigitalSDK private constructor() {
         val intent = ValidationSessionActivity.createIntent(context, type)
         context.startActivity(intent)
     }
+
+//    suspend fun executeChallenge(
+//        challengeId: String,
+//        data: Record,
+//        onError: (IDDigitalError) -> Unit,
+//        onCompleted: () -> Unit
+//    ) {
+//        try {
+//            executeChallengeUseCase(challengeId, data)
+//            onCompleted()
+//        } catch (e: Throwable) {
+//            onError(e.toIDDigitalError())
+//        }
+//    }
+
+//    suspend fun validateChallenge(
+//        challengeId: String,
+//        data: Record,
+//        onError: (IDDigitalError) -> Unit,
+//        onResult: (Boolean) -> Unit
+//    ) {
+//        try {
+//            val isValid = validateChallengeUseCase(challengeId, data)
+//            onResult(isValid)
+//        } catch (e: Throwable) {
+//            onError(e.toIDDigitalError())
+//        }
+//    }
+
+    /**
+     * @param sdkToken OIDC ID token (JWT) from `DeviceAssociation.idToken`, sent to Keycloak as `sdk_token`.
+     */
+    suspend fun sendToKeycloak(
+        tabId: String,
+        sessionCode: String,
+        clientId: String,
+        realm: String,
+        sdkToken: String,
+        onError: (IDDigitalError) -> Unit,
+        onSuccess: (String) -> Unit
+    ) {
+        try {
+            val keycloakService: uy.com.abitab.iddigitalsdk.data.network.KeycloakService = koin.get()
+            val response = keycloakService.sendAuthenticationData(tabId, sessionCode, clientId, realm, sdkToken)
+            onSuccess(response)
+        } catch (e: Throwable) {
+            onError(e.toIDDigitalError())
+        }
+    }
 }
 
 object CallbackHandler {
@@ -174,7 +248,7 @@ object CallbackHandler {
         onErrorHandler?.invoke(error)
     }
 
-    fun onCompleted(challengeId: String) {
-        onCompletedHandler?.invoke(challengeId)
+    fun onCompleted(value: String) {
+        onCompletedHandler?.invoke(value)
     }
 }

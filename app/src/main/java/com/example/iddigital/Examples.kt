@@ -1,3 +1,4 @@
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -105,7 +106,10 @@ fun Examples(sdkInstance: IDDigitalSDK, onError: (IDDigitalError) -> Unit) {
 
                 AssociateDevice(sdkInstance,
                     documentNumber = documentNumber,
-                    onCompleted = { documentNumber = "" })
+                    onCompleted = { idToken ->
+                        Log.d("MainActivity", "ID Token: $idToken")
+                        documentNumber = ""
+                    })
                 CheckAssociation(sdkInstance)
 
                 RemoveAssociation(sdkInstance)
@@ -137,7 +141,7 @@ fun Examples(sdkInstance: IDDigitalSDK, onError: (IDDigitalError) -> Unit) {
 }
 
 @Composable
-fun AssociateDevice(sdkInstance: IDDigitalSDK, documentNumber: String, onCompleted: () -> Unit) {
+fun AssociateDevice(sdkInstance: IDDigitalSDK, documentNumber: String, onCompleted: (idToken: String) -> Unit) {
     val context = LocalContext.current
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
 
@@ -147,11 +151,11 @@ fun AssociateDevice(sdkInstance: IDDigitalSDK, documentNumber: String, onComplet
             try {
                 sdkInstance.associate(context = context, document = Document(
                     number = documentNumber
-                ), onCompleted = {
+                ), onCompleted = { idToken ->
                     Toast.makeText(
                         context, "Dispositivo asociado con éxito", Toast.LENGTH_SHORT
                     ).show()
-                    onCompleted()
+                    onCompleted(idToken)
                 }, onError = {
                     Toast.makeText(
                         context, "Error al asociar dispositivo: $it", Toast.LENGTH_SHORT

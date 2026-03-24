@@ -13,6 +13,7 @@ import uy.com.abitab.iddigitalsdk.domain.models.CanAssociate
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
 import uy.com.abitab.iddigitalsdk.domain.models.Document
+import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
 import uy.com.abitab.iddigitalsdk.utils.ApiResponse
 import uy.com.abitab.iddigitalsdk.utils.BadResponseError
@@ -162,7 +163,6 @@ class ValidationSessionService(private val httpClient: OkHttpClient, private val
             }
         }
 
-
     suspend fun createValidationSession(challengeType: ChallengeType): ValidationSession =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
@@ -216,8 +216,11 @@ class ValidationSessionService(private val httpClient: OkHttpClient, private val
                 throw NoInternetConnection()
             }
 
+            val gson = Gson()
+            val json = gson.toJson(data)
+
             val request =
-                Request.Builder().post("$data".toRequestBody(JSON)) // Check if this works well
+                Request.Builder().post(json.toRequestBody(JSON))
                     .url(buildUrl("challenges/${challengeId}/execute/")).build()
 
             try {
@@ -324,6 +327,4 @@ class ValidationSessionService(private val httpClient: OkHttpClient, private val
         }
 
     }
-
-
 }
