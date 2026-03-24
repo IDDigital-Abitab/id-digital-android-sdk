@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.map
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 
+/** Previous SDK versions persisted this when the API had no idToken; treat as absent when reading. */
+private const val LEGACY_PLACEHOLDER_ID_TOKEN = "TEMP_ID_TOKEN_PENDING_BACKEND"
 
 object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
     override val defaultValue: DeviceAssociationProto = DeviceAssociationProto.getDefaultInstance()
@@ -29,9 +31,6 @@ object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
         t.writeTo(output)
     }
 }
-
-// TODO: Remover cuando el backend envíe idToken correctamente
-private const val TEMP_ID_TOKEN = "TEMP_ID_TOKEN_PENDING_BACKEND"
 
 val Context.deviceAssociationStore: DataStore<DeviceAssociationProto> by dataStore(
     fileName = "device_association.pb",
@@ -50,7 +49,7 @@ suspend fun Context.saveDeviceAssociation(deviceAssociation: DeviceAssociation) 
             .setToken(deviceAssociation.token)
             .setDocument(documentProto)
             .setCreatedAt(deviceAssociation.createdAt)
-            .setIdToken(deviceAssociation.idToken ?: TEMP_ID_TOKEN)
+            .setIdToken(deviceAssociation.idToken.orEmpty())
             .build()
     }
 }
@@ -68,7 +67,9 @@ fun Context.getDeviceAssociation(): Flow<DeviceAssociation?> {
                     country = associationProto.document.country
                 ),
                 createdAt = associationProto.createdAt,
-                idToken = associationProto.idToken
+                idToken = associationProto.idToken.takeIf {
+                    it.isNotEmpty() && it != LEGACY_PLACEHOLDER_ID_TOKEN
+                }
             )
         }
     }

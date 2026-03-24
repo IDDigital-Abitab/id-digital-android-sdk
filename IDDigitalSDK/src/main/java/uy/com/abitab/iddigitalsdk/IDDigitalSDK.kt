@@ -210,6 +210,9 @@ class IDDigitalSDK private constructor() {
 //        }
 //    }
 
+    /**
+     * @param sdkToken OIDC ID token (JWT) from `DeviceAssociation.idToken`, sent to Keycloak as `sdk_token`.
+     */
     suspend fun sendToKeycloak(
         tabId: String,
         sessionCode: String,
