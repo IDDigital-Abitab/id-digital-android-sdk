@@ -1,9 +1,44 @@
+import org.jetbrains.dokka.DokkaConfiguration
+import org.jetbrains.dokka.gradle.DokkaTask
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.dokka)
     `maven-publish`
     id("kotlin-parcelize")
     id("com.google.protobuf") version "0.9.4"
+}
+
+tasks.named<DokkaTask>("dokkaHtml") {
+    moduleName.set("ID Digital SDK")
+    outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+    failOnWarning.set(true)
+
+    dokkaSourceSets.named("main") {
+        documentedVisibilities.set(setOf(DokkaConfiguration.Visibility.PUBLIC))
+        reportUndocumented.set(true)
+        skipEmptyPackages.set(true)
+        suppressGeneratedFiles.set(true)
+
+        perPackageOption {
+            matchingRegex.set(
+                """uy\.com\.abitab\.iddigitalsdk\.(composables|data|di|presentation|ui|domain\.(repositories|usecases))(\..*)?"""
+            )
+            suppress.set(true)
+        }
+
+        suppressedFiles.from(
+            file("src/main/java/uy/com/abitab/iddigitalsdk/IDDigitalSDKBridge.kt"),
+            file("src/main/java/uy/com/abitab/iddigitalsdk/domain/models/ConfigData.kt"),
+            file("src/main/java/uy/com/abitab/iddigitalsdk/domain/models/Record.kt"),
+            file("src/main/java/uy/com/abitab/iddigitalsdk/data/DeviceAssociationDataStoreManager.kt"),
+            fileTree("src/main/java/uy/com/abitab/iddigitalsdk/composables"),
+            fileTree("src/main/java/uy/com/abitab/iddigitalsdk/utils") {
+                exclude("IDDigitalError.kt")
+            }
+        )
+    }
 }
 
 afterEvaluate {
@@ -13,7 +48,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "uy.com.abitab"
                 artifactId = "iddigitalsdk"
-                version = "1.0.0"
+                version = "2.0.0"
             }
         }
     }
@@ -84,6 +119,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // Active-transaction polling (ProcessLifecycleOwner) - .docs/sdk/cliente/09-polling-transaccion-activa.md
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.koin.android)
@@ -96,6 +133,13 @@ dependencies {
     implementation(libs.protobuf.kotlin.lite.v4302)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.biometric)
+
+    // QR cross-device (associateViaQrScan) - .docs/sdk/cliente/08-qr-cross-device.md
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode.scanning)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

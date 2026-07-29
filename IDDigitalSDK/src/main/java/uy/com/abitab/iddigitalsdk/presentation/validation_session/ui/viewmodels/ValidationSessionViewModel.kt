@@ -3,6 +3,7 @@ package uy.com.abitab.iddigitalsdk.presentation.validation_session.ui.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import getDeviceAssociation
+import removeDeviceAssociation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -78,7 +79,15 @@ class ValidationSessionViewModel(
                 currentChallengeIndex = 0
                 launchNextChallenge()
             } catch (e: Throwable) {
-                _uiState.emit(ValidationSessionUiState.Error(e.toIDDigitalError("Error creating validation session")))
+                val error = e.toIDDigitalError("Error creating validation session")
+                if (error is DeviceNotAssociatedError) {
+                    // Local storage said isAssociated() == true, but the backend rejected
+                    // the token (see ValidationSessionService.createValidationSession).
+                    // Clear it so a subsequent attempt goes through associate() again
+                    // instead of repeating this same failure forever.
+                    getApplication<Application>().removeDeviceAssociation()
+                }
+                _uiState.emit(ValidationSessionUiState.Error(error))
             }
         }
     }
@@ -86,7 +95,7 @@ class ValidationSessionViewModel(
     private suspend fun launchNextChallenge() {
         if (currentChallengeIndex >= challenges.size) {
             viewModelScope.launch {
-                _uiState.emit(ValidationSessionUiState.Success)
+                _uiState.emit(ValidationSessionUiState.Success(validationSession.id))
             }
             return
         }
@@ -208,6 +217,6 @@ sealed class ValidationSessionUiState {
         val pinRecentlyChanged: Boolean = false
     ) : ValidationSessionUiState()
 
-    object Success : ValidationSessionUiState()
+    data class Success(val validationSessionId: String) : ValidationSessionUiState()
     data class Error(val error: IDDigitalError) : ValidationSessionUiState()
 }

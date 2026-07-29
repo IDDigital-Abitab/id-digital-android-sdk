@@ -13,7 +13,6 @@ import uy.com.abitab.iddigitalsdk.data.PinDataStoreManager
 import uy.com.abitab.iddigitalsdk.domain.models.Challenge
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
-import uy.com.abitab.iddigitalsdk.domain.usecases.CheckCanAssociateUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CompleteDeviceAssociationUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateDeviceAssociationUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
@@ -23,13 +22,10 @@ import uy.com.abitab.iddigitalsdk.domain.usecases.ValidatePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.utils.ChallengeValidationError
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.UnknownError
-import uy.com.abitab.iddigitalsdk.utils.UserCannotBeAssociatedError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
-import uy.com.abitab.iddigitalsdk.domain.models.Document as DocumentModel
 
 class DeviceAssociationViewModel(
     application: Application,
-    private val checkCanAssociateUseCase: CheckCanAssociateUseCase,
     private val createDeviceAssociationUseCase: CreateDeviceAssociationUseCase,
     private val completeDeviceAssociationUseCase: CompleteDeviceAssociationUseCase,
     private val executePinChallengeUseCase: ExecutePinChallengeUseCase,
@@ -48,13 +44,13 @@ class DeviceAssociationViewModel(
     private var challenges: List<Challenge> = emptyList()
     private var currentChallengeIndex = 0
     private var currentChallengeValidationErrors = 0
-    private lateinit var document: DocumentModel
+    private lateinit var transactionId: String
     private var viewModelJob = SupervisorJob()
     private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
 
-    fun setDocument(document: DocumentModel) {
-        this.document = document
+    fun setTransactionId(transactionId: String) {
+        this.transactionId = transactionId
         viewModelScope.launch {
             _uiState.emit(DeviceAssociationUiState.Initial)
         }
@@ -65,12 +61,7 @@ class DeviceAssociationViewModel(
         viewModelScope.launch {
             try {
                 _uiState.emit(DeviceAssociationUiState.Loading)
-                val canAssociate = checkCanAssociateUseCase(document)
-                if (!canAssociate) {
-                    _uiState.emit(DeviceAssociationUiState.Error(UserCannotBeAssociatedError()))
-                    return@launch
-                }
-                val session = createDeviceAssociationUseCase(document)
+                val session = createDeviceAssociationUseCase(transactionId)
                 challenges = session.challenges
                 deviceAssociationSession = session
                 currentChallengeIndex = 0
@@ -93,7 +84,7 @@ class DeviceAssociationViewModel(
         viewModelScope.launch {
             // Empty string when backend omits idToken (e.g. client without active secret).
             val idToken = deviceAssociation.idToken.orEmpty()
-            _uiState.emit(DeviceAssociationUiState.Success(idToken))
+            _uiState.emit(DeviceAssociationUiState.Success(idToken, deviceAssociationSession.id))
         }
     }
 
@@ -202,6 +193,6 @@ sealed class DeviceAssociationUiState {
     data class LaunchChallenge(val challenge: Challenge, val isRetry: Boolean = false) :
         DeviceAssociationUiState()
 
-    data class Success(val idToken: String) : DeviceAssociationUiState()
+    data class Success(val idToken: String, val validationSessionId: String) : DeviceAssociationUiState()
     data class Error(val error: IDDigitalError) : DeviceAssociationUiState()
 }

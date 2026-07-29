@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Necesario desde Android 13 (API 33) para mostrar la notificación del push
+         cross-device, ver IDDigitalSampleFcmService. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,12 +21,61 @@
 <!--            android:exported="false" />-->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Deep link de retorno del login Keycloak (Custom Tab), ver KeycloakAuth.kt.
+                 El scheme/host deben coincidir con KEYCLOAK_REDIRECT_URI en local.properties. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="iddigitalsample" android:host="auth" />
+            </intent-filter>
+            <!-- Deep link same-device del puente web, ver
+                 .docs/sdk/cliente/07-deep-link-same-device.md. El scheme debe coincidir con
+                 sdk.Client.android_deep_link_url configurado en el backend para este cliente. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="iddigitalsample" android:host="sdkauth" />
+            </intent-filter>
+            <!-- Caso no estandar: retorno del boton "Id Digital" para clientes en una lista
+                 tipo MOBILE_CLIENTS de un Keycloak de terceros (ver
+                 BQMAuthenticator.buildRedirectUriForIdigital en el repo de Keycloak). No
+                 aplica con la configuracion recomendada del SDK (ver
+                 .docs/sdk/cliente/02-configuracion-keycloak.md), donde el client_id del SDK
+                 no deberia estar en esa lista. Se deja este intent-filter como referencia
+                 para el caso en que un Keycloak de terceros fuerce ese patron igualmente: ese
+                 metodo arma "{scheme}:/user/redirectKc" con una sola barra, sin authority
+                 (bug conocido, no lo corregimos ahi porque es codigo compartido con otros
+                 integradores). A diferencia de los otros dos filtros de arriba, este NO
+                 declara host: si se omite host, Android ignora host y path al matchear
+                 (ver docs de <data>), asi que este filtro matchea por scheme sin importar
+                 si el Uri tiene authority o no - nos hace robustos a ese formato en vez de
+                 depender de que Keycloak lo mande "bien". Ver KeycloakAuth.kt
+                 parseIdDigitalCallback(). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="iddigitalsample" />
+            </intent-filter>
         </activity>
+
+        <!-- Recibe el push cross-device (rol FCM propio del Integrador), ver
+             com.example.iddigital.fcm.IDDigitalSampleFcmService. -->
+        <service
+            android:name=".fcm.IDDigitalSampleFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

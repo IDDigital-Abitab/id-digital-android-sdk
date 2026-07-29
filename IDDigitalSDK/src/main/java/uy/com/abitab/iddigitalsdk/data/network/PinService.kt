@@ -27,8 +27,8 @@ class PinService(private val httpClient: OkHttpClient, private val context: Cont
 
             val data = mapOf(
                 "documentNumber" to document.number,
-                "documentType" to (document.type ?: "ci"),
-                "documentCountry" to (document.country ?: "UY")
+                "documentType" to document.type,
+                "documentCountry" to document.country
             )
 
             val jsonObject = JSONObject(data)

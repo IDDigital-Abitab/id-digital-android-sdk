@@ -2,7 +2,6 @@ package uy.com.abitab.iddigitalsdk.presentation.device_association.ui
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,9 +12,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import uy.com.abitab.iddigitalsdk.CallbackHandler
-import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.screens.DeviceAssociation
-import uy.com.abitab.iddigitalsdk.utils.InvalidDocumentError
+import uy.com.abitab.iddigitalsdk.utils.UnknownError
 
 class DeviceAssociationActivity : AppCompatActivity() {
     private var activityScope = CoroutineScope(SupervisorJob())
@@ -24,15 +22,11 @@ class DeviceAssociationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         configureSystemUI()
-        val document = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(EXTRA_DOCUMENT, Document::class.java)
-        } else {
-            @Suppress("DEPRECATION") intent.getSerializableExtra(EXTRA_DOCUMENT) as? Document
-        }
+        val transactionId = intent.getStringExtra(EXTRA_TRANSACTION_ID)
 
-        if (document == null) {
+        if (transactionId == null) {
             CallbackHandler.onError(
-                InvalidDocumentError("Document is null")
+                UnknownError("transactionId is null")
             )
             finish()
             return
@@ -40,7 +34,7 @@ class DeviceAssociationActivity : AppCompatActivity() {
 
         setContent {
             val context = LocalContext.current
-            DeviceAssociation(document = document, context = context, onClose = {
+            DeviceAssociation(transactionId = transactionId, context = context, onClose = {
                 finish()
             })
         }
@@ -59,14 +53,14 @@ class DeviceAssociationActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val EXTRA_DOCUMENT = "EXTRA_DOCUMENT"
+        private const val EXTRA_TRANSACTION_ID = "EXTRA_TRANSACTION_ID"
 
         fun createIntent(
             context: Context,
-            document: Document,
+            transactionId: String,
         ): Intent {
             return Intent(context, DeviceAssociationActivity::class.java).apply {
-                putExtra(EXTRA_DOCUMENT, document)
+                putExtra(EXTRA_TRANSACTION_ID, transactionId)
             }
         }
     }

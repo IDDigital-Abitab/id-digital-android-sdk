@@ -11,6 +11,13 @@ abstract class BaseService : KoinComponent {
 
     private val baseUrl: String
         get() {
+            // Override para desarrollo/testing contra un backend propio, ver
+            // IDDigitalSDK.initialize(baseUrl). Nunca seteado por STAGING/PRODUCTION.
+            val customBaseUrl: String? = getKoin().getProperty("customBaseUrl")
+            if (!customBaseUrl.isNullOrBlank()) {
+                return customBaseUrl
+            }
+
             val environmentName: String? = getKoin().getProperty("environment")
             val environment = try {
                 IDDigitalSDKEnvironment.valueOf(environmentName ?: IDDigitalSDKEnvironment.PRODUCTION.name)

@@ -3,5 +3,10 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">192.168.1.21</domain>
     </domain-config>
+    <!-- Droplet de desarrollo usado para probar la app contra un backend propio
+         (ver API_BASE_URL en local.properties / BaseService.kt customBaseUrl). -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">134.209.212.71</domain>
+    </domain-config>
     <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

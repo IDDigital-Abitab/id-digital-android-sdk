@@ -20,10 +20,11 @@ import uy.com.abitab.iddigitalsdk.domain.repositories.PinRepository
 import uy.com.abitab.iddigitalsdk.domain.repositories.PinRepositoryImpl
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepository
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepositoryImpl
-import uy.com.abitab.iddigitalsdk.domain.usecases.CheckCanAssociateUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CompleteDeviceAssociationUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.CompleteTransactionUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateDeviceAssociationUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateValidationSessionUseCase
+import uy.com.abitab.iddigitalsdk.domain.usecases.GetPendingTransactionsUseCase
 //import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecutePinChallengeUseCase
@@ -33,6 +34,7 @@ import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCa
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidatePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.viewmodels.DeviceAssociationViewModel
 import uy.com.abitab.iddigitalsdk.presentation.validation_session.ui.viewmodels.ValidationSessionViewModel
+import uy.com.abitab.iddigitalsdk.utils.ActiveTransactionPoller
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializer
 import uy.com.abitab.iddigitalsdk.utils.AmplifyInitializerInterface
 import uy.com.abitab.iddigitalsdk.utils.PermissionsManager
@@ -95,15 +97,18 @@ internal fun sdkModule() = module {
     factory { ExecutePinChallengeUseCase(get()) }
     factory { ValidatePinChallengeUseCase(get(), Dispatchers.IO) }
     // device association
-    factory { CheckCanAssociateUseCase(get(), Dispatchers.IO) }
     factory { CreateDeviceAssociationUseCase(get(), Dispatchers.IO) }
     factory { CompleteDeviceAssociationUseCase(get(), Dispatchers.IO) }
     factory { RemoveAssociationUseCase(get(), Dispatchers.IO) }
     // validation session
     factory { CreateValidationSessionUseCase(get(), Dispatchers.IO) }
+    factory { CompleteTransactionUseCase(get(), Dispatchers.IO) }
+    factory { GetPendingTransactionsUseCase(get(), Dispatchers.IO) }
 //    factory { ExecuteChallengeUseCase(get(), Dispatchers.IO) }
 //    factory { ValidateChallengeUseCase(get(), Dispatchers.IO) }
 
+    // active transaction polling (canal redundante al push)
+    single { ActiveTransactionPoller(androidContext(), get()) }
 
     // --- VIEW MODELS ---
     viewModelOf(::DeviceAssociationViewModel)

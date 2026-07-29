@@ -1,5 +1,10 @@
 package uy.com.abitab.iddigitalsdk.domain.models
 
+/**
+ * Representación interna de una sesión de validación.
+ *
+ * @suppress
+ */
 data class ValidationSession(
     val id: String,
     val type: String,
@@ -10,7 +15,16 @@ data class ValidationSession(
     val payload: Map<String, Any>
 )
 
-/** [idToken] is the OIDC ID Token (JWT) when the backend client has an active secret; null otherwise. */
+/**
+ * Asociación almacenada para el dispositivo actual.
+ *
+ * @property token credencial privada utilizada por la SDK para autenticar al dispositivo.
+ * La aplicación no debe transmitirla ni persistir copias adicionales.
+ * @property document documento del ciudadano asociado.
+ * @property createdAt fecha de creación informada por el backend.
+ * @property idToken token OIDC disponible cuando la integración tiene un secreto activo, o
+ * `null` cuando no corresponde emitirlo.
+ */
 data class DeviceAssociation(
     val token: String,
     val document: Document,
@@ -18,4 +32,18 @@ data class DeviceAssociation(
     val idToken: String?,
 )
 
-data class CanAssociate(val canAssociate: Boolean)
+/**
+ * Resultado interno del cierre de una transacción.
+ *
+ * @suppress
+ */
+data class CompleteTransactionResult(val finishUrl: String?)
+
+/**
+ * Representación interna de una transacción pendiente detectada por polling.
+ *
+ * @suppress
+ */
+data class PendingTransaction(val id: String)
+
+internal data class PendingTransactionsData(val transactions: List<PendingTransaction>)

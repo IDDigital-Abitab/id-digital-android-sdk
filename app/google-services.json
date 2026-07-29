@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1094238506966",
+    "project_id": "iddigital-sdk-sample",
+    "storage_bucket": "iddigital-sdk-sample.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094238506966:android:f53b64c217336e88b51e77",
+        "android_client_info": {
+          "package_name": "com.example.iddigital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCD0wwLDYCSgYVWgIQNchZmb93NRKT8JdU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

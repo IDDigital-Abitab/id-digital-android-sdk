@@ -6,7 +6,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
-import uy.com.abitab.iddigitalsdk.domain.models.Document
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
@@ -34,6 +33,11 @@ object IDDigitalSDKJavaWrapper {
     }
 
     @FunctionalInterface
+    interface OnAssociationCompletedListener {
+        fun onCompleted(idToken: String, validationSessionId: String)
+    }
+
+    @FunctionalInterface
     interface OnBooleanResultListener {
         fun onResult(value: Boolean)
     }
@@ -49,12 +53,14 @@ object IDDigitalSDKJavaWrapper {
     }
 
     @JvmStatic
+    @JvmOverloads
     fun initialize(
         context: Context,
         apiKey: String,
         environment: IDDigitalSDKEnvironment,
         onError: OnErrorListener?,
-        onCompleted: OnCompletedListener?
+        onCompleted: OnCompletedListener?,
+        baseUrl: String? = null
     ) {
         try {
             sdk = IDDigitalSDK.initialize(
@@ -62,7 +68,8 @@ object IDDigitalSDKJavaWrapper {
                 apiKey,
                 environment,
                 { error -> onError?.onError(error) },
-                { result -> onCompleted?.onCompleted(result) }
+                { result -> onCompleted?.onCompleted(result) },
+                baseUrl
             )
         } catch (e: Throwable) {
             onError?.onError(e.toIDDigitalError())
@@ -72,38 +79,21 @@ object IDDigitalSDKJavaWrapper {
     @JvmStatic
     fun associate(
         context: Context,
-        document: Document,
+        transactionId: String,
         onError: OnErrorListener?,
-        onCompleted: OnCompletedListener?
+        onCompleted: OnAssociationCompletedListener?
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 sdk?.associate(
                     context,
-                    document,
+                    transactionId,
                     { error -> onError?.onError(error) },
-                    { result -> onCompleted?.onCompleted(result) }
+                    { idToken, validationSessionId -> onCompleted?.onCompleted(idToken, validationSessionId) }
                 )
             } catch (e: Throwable) {
                 onError?.onError(e.toIDDigitalError())
             }
-        }
-    }
-
-    @JvmStatic
-    fun canAssociate(
-        document: Document,
-        onError: OnErrorListener?,
-        listener: OnBooleanResultListener
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val result = try {
-                sdk?.canAssociate(document, { error -> onError?.onError(error) }) ?: false
-            } catch (e: Throwable) {
-                onError?.onError(e.toIDDigitalError())
-                false
-            }
-            listener.onResult(result)
         }
     }
 
