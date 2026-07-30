@@ -29,13 +29,13 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 
 @Preview
 @Composable
-fun LivenessErrorScreenPreview() {
+internal fun LivenessErrorScreenPreview() {
     LivenessErrorScreen(onClose = {}, onRetry = {})
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LivenessErrorScreen(onClose: () -> Unit, onRetry: () -> Unit) {
+internal fun LivenessErrorScreen(onClose: () -> Unit, onRetry: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     AbitabTheme {

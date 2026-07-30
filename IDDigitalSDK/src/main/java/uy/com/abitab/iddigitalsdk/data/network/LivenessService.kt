@@ -15,7 +15,7 @@ import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-class LivenessService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class LivenessService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {

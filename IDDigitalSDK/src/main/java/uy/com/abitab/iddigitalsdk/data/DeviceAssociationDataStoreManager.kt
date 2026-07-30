@@ -16,7 +16,7 @@ import uy.com.abitab.iddigitalsdk.domain.models.Document
 /** Previous SDK versions persisted this when the API had no idToken; treat as absent when reading. */
 private const val LEGACY_PLACEHOLDER_ID_TOKEN = "TEMP_ID_TOKEN_PENDING_BACKEND"
 
-object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
+internal object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
     override val defaultValue: DeviceAssociationProto = DeviceAssociationProto.getDefaultInstance()
 
     override suspend fun readFrom(input: InputStream): DeviceAssociationProto {
@@ -32,12 +32,12 @@ object DeviceAssociationSerializer : Serializer<DeviceAssociationProto> {
     }
 }
 
-val Context.deviceAssociationStore: DataStore<DeviceAssociationProto> by dataStore(
+internal val Context.deviceAssociationStore: DataStore<DeviceAssociationProto> by dataStore(
     fileName = "device_association.pb",
     serializer = DeviceAssociationSerializer
 )
 
-suspend fun Context.saveDeviceAssociation(deviceAssociation: DeviceAssociation) {
+internal suspend fun Context.saveDeviceAssociation(deviceAssociation: DeviceAssociation) {
     deviceAssociationStore.updateData { currentAssociation ->
         val documentProto = DocumentProto.newBuilder()
             .setType(deviceAssociation.document.type)
@@ -54,7 +54,7 @@ suspend fun Context.saveDeviceAssociation(deviceAssociation: DeviceAssociation) 
     }
 }
 
-fun Context.getDeviceAssociation(): Flow<DeviceAssociation?> {
+internal fun Context.getDeviceAssociation(): Flow<DeviceAssociation?> {
     return deviceAssociationStore.data.map { associationProto ->
         if (associationProto == DeviceAssociationProto.getDefaultInstance()) {
             null
@@ -75,7 +75,7 @@ fun Context.getDeviceAssociation(): Flow<DeviceAssociation?> {
     }
 }
 
-suspend fun Context.removeDeviceAssociation() {
+internal suspend fun Context.removeDeviceAssociation() {
     deviceAssociationStore.updateData {
         DeviceAssociationProto.getDefaultInstance()
     }

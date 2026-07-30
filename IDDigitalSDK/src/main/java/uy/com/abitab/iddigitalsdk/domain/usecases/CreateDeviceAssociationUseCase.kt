@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepository
 
-class CreateDeviceAssociationUseCase(
+internal class CreateDeviceAssociationUseCase(
     private val validationSessionRepository: ValidationSessionRepository,
     private val dispatcher: CoroutineDispatcher,
 ) {

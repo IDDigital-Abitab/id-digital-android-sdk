@@ -4,7 +4,7 @@ import uy.com.abitab.iddigitalsdk.data.network.PinService
 import uy.com.abitab.iddigitalsdk.domain.models.Document
 import java.time.Instant
 
-class PinRepositoryImpl(private val pinService: PinService) : PinRepository {
+internal class PinRepositoryImpl(private val pinService: PinService) : PinRepository {
     override suspend fun createChallenge(document: Document): String {
         return pinService.createChallenge(document)
     }

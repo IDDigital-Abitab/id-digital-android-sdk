@@ -11,16 +11,16 @@ import kotlinx.coroutines.runBlocking
 import java.security.MessageDigest
 import java.util.UUID
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "IDDigitalSDK")
+internal val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "IDDigitalSDK")
 
 private val ID_DIGITAL_INSTALLATION_UUID_KEY = stringPreferencesKey("id_digital_installation_uuid")
 
-suspend fun getDeviceFingerprint(context: Context): String {
+internal suspend fun getDeviceFingerprint(context: Context): String {
     val uuid = getAppSpecificUUID(context)
     return hashString(uuid)
 }
 
-suspend fun getAppSpecificUUID(context: Context): String {
+internal suspend fun getAppSpecificUUID(context: Context): String {
     val preferences = context.dataStore.data.first()
     val existingUUID = preferences[ID_DIGITAL_INSTALLATION_UUID_KEY]
 

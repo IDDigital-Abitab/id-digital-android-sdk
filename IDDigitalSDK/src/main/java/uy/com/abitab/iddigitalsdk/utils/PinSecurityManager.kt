@@ -13,7 +13,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class PinSecurityManager() {
+internal class PinSecurityManager() {
     private val KEY_ALIAS = "biometric_pin_key_alias"
     private val ANDROID_KEYSTORE = "AndroidKeyStore"
     private val AES_MODE = "AES/GCM/NoPadding"

@@ -44,7 +44,7 @@ import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
  * same app.
  */
 @Composable
-fun QrValidationFlow(challengeType: ChallengeType, context: Context, onClose: () -> Unit) {
+internal fun QrValidationFlow(challengeType: ChallengeType, context: Context, onClose: () -> Unit) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 

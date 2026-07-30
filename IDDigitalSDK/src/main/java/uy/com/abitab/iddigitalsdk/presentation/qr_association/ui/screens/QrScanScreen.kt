@@ -59,7 +59,7 @@ import java.util.concurrent.Executors
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QrScanScreen(onScanned: (String) -> Unit, onClose: () -> Unit) {
+internal fun QrScanScreen(onScanned: (String) -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 

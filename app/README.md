@@ -51,7 +51,7 @@ Para probar específicamente el camino de **validación** (paso 3, con asociaci�
 
 ## Sección "Herramientas / debug"
 
-Debajo del flujo guiado quedan los métodos de la SDK expuestos de forma aislada (`canAssociate`, `associate`, `associateViaQrScan`, `isAssociated`, `removeAssociation`, `createValidationSession`, y un `completeTransaction` manual), útiles para probar cada uno por separado sin pasar por Keycloak, más el botón para copiar el token FCM del dispositivo.
+Debajo del flujo guiado quedan los métodos de la SDK expuestos de forma aislada (`associate`, `associateViaQrScan`, `validateViaQrScan`, `isAssociated`, `removeAssociation`, `createValidationSession` y un `completeTransaction` manual), útiles para probar cada uno por separado sin pasar por Keycloak, más el botón para copiar el token FCM del dispositivo.
 
 ## Fuera de alcance de esta app
 

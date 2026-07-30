@@ -89,7 +89,7 @@ private val darkScheme = darkColorScheme(
 )
 
 @Composable
-fun AbitabTheme(
+internal fun AbitabTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable() () -> Unit

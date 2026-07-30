@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import uy.com.abitab.iddigitalsdk.domain.models.CompleteTransactionResult
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepository
 
-class CompleteTransactionUseCase (
+internal class CompleteTransactionUseCase (
     private val validationSessionRepository: ValidationSessionRepository,
     private val dispatcher: CoroutineDispatcher,
 ) {

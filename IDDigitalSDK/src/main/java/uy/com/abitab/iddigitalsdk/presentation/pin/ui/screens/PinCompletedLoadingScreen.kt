@@ -30,7 +30,7 @@ import uy.com.abitab.iddigitalsdk.composables.components.IDDigitalWatermark
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PinCompletedLoadingScreen() {
+internal fun PinCompletedLoadingScreen() {
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.loading)
     )

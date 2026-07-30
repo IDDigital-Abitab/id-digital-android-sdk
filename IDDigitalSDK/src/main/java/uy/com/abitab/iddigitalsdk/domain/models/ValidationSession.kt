@@ -5,7 +5,7 @@ package uy.com.abitab.iddigitalsdk.domain.models
  *
  * @suppress
  */
-data class ValidationSession(
+internal data class ValidationSession(
     val id: String,
     val type: String,
     val status: String,
@@ -37,13 +37,13 @@ data class DeviceAssociation(
  *
  * @suppress
  */
-data class CompleteTransactionResult(val finishUrl: String?)
+internal data class CompleteTransactionResult(val finishUrl: String?)
 
 /**
  * Representación interna de una transacción pendiente detectada por polling.
  *
  * @suppress
  */
-data class PendingTransaction(val id: String)
+internal data class PendingTransaction(val id: String)
 
 internal data class PendingTransactionsData(val transactions: List<PendingTransaction>)

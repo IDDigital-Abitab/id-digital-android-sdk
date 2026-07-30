@@ -13,7 +13,7 @@ import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-class ConfigService(private val httpClient: OkHttpClient):
+internal class ConfigService(private val httpClient: OkHttpClient):
     BaseService() {
 
     suspend fun getConfiguration(): ConfigData = withContext(Dispatchers.IO) {

@@ -10,17 +10,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import uy.com.abitab.iddigitalsdk.R
 import uy.com.abitab.iddigitalsdk.presentation.liveness.ui.screens.LivenessInstructionsScreen
 
-val bodyFontFamily = FontFamily(
+internal val bodyFontFamily = FontFamily(
     Font(R.font.roboto, weight = FontWeight(300)),
 )
 
-val displayFontFamily = FontFamily(
+internal val displayFontFamily = FontFamily(
     Font(R.font.roboto, weight = FontWeight(700)),
 )
 
-val baseline = Typography()
+internal val baseline = Typography()
 
-val AppTypography = Typography(
+internal val AppTypography = Typography(
     displayLarge = baseline.displayLarge.copy(fontFamily = displayFontFamily),
     displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily),
     displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily),

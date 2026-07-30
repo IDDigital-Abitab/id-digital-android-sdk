@@ -81,11 +81,11 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 import androidx.compose.material3.Button as MaterialButton
 import androidx.core.net.toUri
 
-const val PIN_LENGTH = 4
+internal const val PIN_LENGTH = 4
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PinScreen(
+internal fun PinScreen(
     onCompleted: (pin: String, saveBiometricPin: Boolean, usedBiometric: Boolean, savePinToBiometrics: Boolean) -> Unit,
     onBack: (() -> Unit)? = null,
     onClose: () -> Unit,
@@ -504,7 +504,7 @@ fun PinScreen(
 }
 
 @Composable
-fun PinDigitButton(value: String, onClick: (value: String) -> Unit) {
+internal fun PinDigitButton(value: String, onClick: (value: String) -> Unit) {
     return MaterialButton(
         shape = ButtonDefaults.filledTonalShape,
         colors = ButtonDefaults.filledTonalButtonColors(),
@@ -519,12 +519,12 @@ fun PinDigitButton(value: String, onClick: (value: String) -> Unit) {
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LostPinAlertPreview() {
+internal fun LostPinAlertPreview() {
     LostPinAlert(onDismiss = {})
 }
 
 @Composable
-fun LostPinAlert(onDismiss: () -> Unit) {
+internal fun LostPinAlert(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val intent = remember { Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=uy.com.abitab.iddigital.prod".toUri()) }
 
@@ -579,7 +579,7 @@ fun LostPinAlert(onDismiss: () -> Unit) {
 
 }
 
-sealed class BiometricAuthStatus {
+internal sealed class BiometricAuthStatus {
     object Idle : BiometricAuthStatus()
     object Prompting : BiometricAuthStatus()
     object Success : BiometricAuthStatus()

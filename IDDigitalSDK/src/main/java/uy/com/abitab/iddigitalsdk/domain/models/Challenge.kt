@@ -7,7 +7,7 @@ import java.io.Serializable
  *
  * @suppress
  */
-data class Challenge(
+internal data class Challenge(
     val id: String,
     val type: String,
     val status: String,

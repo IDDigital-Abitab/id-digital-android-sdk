@@ -18,7 +18,7 @@ import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 import java.time.Instant
 
-class PinService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class PinService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {

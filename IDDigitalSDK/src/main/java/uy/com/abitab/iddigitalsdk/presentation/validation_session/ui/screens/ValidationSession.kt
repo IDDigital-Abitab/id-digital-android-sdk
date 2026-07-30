@@ -25,7 +25,7 @@ import uy.com.abitab.iddigitalsdk.presentation.validation_session.ui.viewmodels.
 import uy.com.abitab.iddigitalsdk.presentation.validation_session.ui.viewmodels.ValidationSessionViewModel
 
 @Composable
-fun ValidationSession(challengeType: ChallengeType, context: Context, onClose: () -> Unit) {
+internal fun ValidationSession(challengeType: ChallengeType, context: Context, onClose: () -> Unit) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 

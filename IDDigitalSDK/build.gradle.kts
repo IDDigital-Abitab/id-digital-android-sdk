@@ -29,9 +29,7 @@ tasks.named<DokkaTask>("dokkaHtml") {
         }
 
         suppressedFiles.from(
-            file("src/main/java/uy/com/abitab/iddigitalsdk/IDDigitalSDKBridge.kt"),
             file("src/main/java/uy/com/abitab/iddigitalsdk/domain/models/ConfigData.kt"),
-            file("src/main/java/uy/com/abitab/iddigitalsdk/domain/models/Record.kt"),
             file("src/main/java/uy/com/abitab/iddigitalsdk/data/DeviceAssociationDataStoreManager.kt"),
             fileTree("src/main/java/uy/com/abitab/iddigitalsdk/composables"),
             fileTree("src/main/java/uy/com/abitab/iddigitalsdk/utils") {

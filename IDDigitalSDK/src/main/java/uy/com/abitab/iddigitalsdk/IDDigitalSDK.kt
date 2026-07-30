@@ -20,12 +20,9 @@ import uy.com.abitab.iddigitalsdk.di.sdkModule
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
-import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.usecases.CompleteTransactionUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateValidationSessionUseCase
-// import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.RemoveAssociationUseCase
-// import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateChallengeUseCase
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.DeviceAssociationActivity
 import uy.com.abitab.iddigitalsdk.presentation.qr_association.ui.QrAssociationActivity
 import uy.com.abitab.iddigitalsdk.presentation.qr_validation.ui.QrValidationActivity
@@ -50,8 +47,6 @@ class IDDigitalSDK private constructor() {
     private var createValidationSessionUseCase: CreateValidationSessionUseCase
     private var completeTransactionUseCase: CompleteTransactionUseCase
     private var activeTransactionPoller: ActiveTransactionPoller
-//    private var executeChallengeUseCase: ExecuteChallengeUseCase
-//    private var validateChallengeUseCase: ValidateChallengeUseCase
 
     private val koin by lazy { GlobalContext.get() }
 
@@ -61,8 +56,6 @@ class IDDigitalSDK private constructor() {
         createValidationSessionUseCase = koin.get()
         completeTransactionUseCase = koin.get()
         activeTransactionPoller = koin.get()
-//        executeChallengeUseCase = koin.get()
-//        validateChallengeUseCase = koin.get()
     }
 
 
@@ -378,62 +371,6 @@ class IDDigitalSDK private constructor() {
         }
     }
 
-//    suspend fun executeChallenge(
-//        challengeId: String,
-//        data: Record,
-//        onError: (IDDigitalError) -> Unit,
-//        onCompleted: () -> Unit
-//    ) {
-//        try {
-//            executeChallengeUseCase(challengeId, data)
-//            onCompleted()
-//        } catch (e: Throwable) {
-//            onError(e.toIDDigitalError())
-//        }
-//    }
-
-//    suspend fun validateChallenge(
-//        challengeId: String,
-//        data: Record,
-//        onError: (IDDigitalError) -> Unit,
-//        onResult: (Boolean) -> Unit
-//    ) {
-//        try {
-//            val isValid = validateChallengeUseCase(challengeId, data)
-//            onResult(isValid)
-//        } catch (e: Throwable) {
-//            onError(e.toIDDigitalError())
-//        }
-//    }
-
-    /**
-     * Envía a Keycloak el token de una asociación para continuar el flujo de autenticación.
-     *
-     * @param tabId identificador de la pestaña de autenticación de Keycloak.
-     * @param sessionCode código de la sesión de autenticación.
-     * @param clientId identificador del cliente configurado en Keycloak.
-     * @param realm realm de Keycloak.
-     * @param sdkToken token OIDC obtenido de [DeviceAssociation.idToken].
-     * @param onError se invoca si Keycloak rechaza la solicitud o no puede alcanzarse.
-     * @param onSuccess se invoca con la respuesta devuelta por Keycloak.
-     */
-    suspend fun sendToKeycloak(
-        tabId: String,
-        sessionCode: String,
-        clientId: String,
-        realm: String,
-        sdkToken: String,
-        onError: (IDDigitalError) -> Unit,
-        onSuccess: (String) -> Unit
-    ) {
-        try {
-            val keycloakService: uy.com.abitab.iddigitalsdk.data.network.KeycloakService = koin.get()
-            val response = keycloakService.sendAuthenticationData(tabId, sessionCode, clientId, realm, sdkToken)
-            onSuccess(response)
-        } catch (e: Throwable) {
-            onError(e.toIDDigitalError())
-        }
-    }
 }
 
 /**
@@ -441,7 +378,7 @@ class IDDigitalSDK private constructor() {
  *
  * @suppress
  */
-object CallbackHandler {
+internal object CallbackHandler {
     private var onErrorHandler: ((IDDigitalError) -> Unit)? = null
     private var onCompletedHandler: ((String) -> Unit)? = null
     private var onAssociationCompletedHandler: ((idToken: String, validationSessionId: String) -> Unit)? = null

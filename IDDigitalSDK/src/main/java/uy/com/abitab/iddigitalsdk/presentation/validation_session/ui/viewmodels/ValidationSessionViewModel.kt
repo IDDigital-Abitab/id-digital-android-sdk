@@ -27,7 +27,7 @@ import uy.com.abitab.iddigitalsdk.utils.UnknownError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 import java.time.Instant
 
-class ValidationSessionViewModel(
+internal class ValidationSessionViewModel(
     application: Application,
     private val createValidationSessionUseCase: CreateValidationSessionUseCase,
     private val executePinChallengeUseCase: ExecutePinChallengeUseCase,
@@ -208,7 +208,7 @@ class ValidationSessionViewModel(
     }
 }
 
-sealed class ValidationSessionUiState {
+internal sealed class ValidationSessionUiState {
     object Initial : ValidationSessionUiState()
     object Loading : ValidationSessionUiState()
     data class LaunchChallenge(

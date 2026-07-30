@@ -43,7 +43,7 @@ import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
  * same app.
  */
 @Composable
-fun QrAssociationFlow(context: Context, onClose: () -> Unit) {
+internal fun QrAssociationFlow(context: Context, onClose: () -> Unit) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 

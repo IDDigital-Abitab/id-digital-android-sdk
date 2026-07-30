@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import uy.com.abitab.iddigitalsdk.domain.models.PendingTransaction
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepository
 
-class GetPendingTransactionsUseCase(
+internal class GetPendingTransactionsUseCase(
     private val validationSessionRepository: ValidationSessionRepository,
     private val dispatcher: CoroutineDispatcher,
 ) {

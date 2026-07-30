@@ -5,7 +5,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.koin.core.component.KoinComponent
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 
-abstract class BaseService : KoinComponent {
+internal abstract class BaseService : KoinComponent {
     val JSON = "application/json; charset=utf-8".toMediaType()
     val EMPTY_REQUEST_BODY = ByteArray(0).toRequestBody()
 

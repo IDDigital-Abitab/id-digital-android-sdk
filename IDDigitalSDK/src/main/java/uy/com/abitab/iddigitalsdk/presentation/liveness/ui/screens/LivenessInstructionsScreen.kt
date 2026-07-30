@@ -60,11 +60,11 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LivenessIntructionsScreenPreview() {
+internal fun LivenessIntructionsScreenPreview() {
     LivenessInstructionsScreen(onStart = {}, onBack = {}, onClose = {})
 }
 
-fun isCameraPermissionGranted(context: android.content.Context): Boolean {
+internal fun isCameraPermissionGranted(context: android.content.Context): Boolean {
     return ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.CAMERA
@@ -74,7 +74,7 @@ fun isCameraPermissionGranted(context: android.content.Context): Boolean {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LivenessInstructionsScreen(onStart: () -> Unit, onBack: (() -> Unit)?, onClose: () -> Unit) {
+internal fun LivenessInstructionsScreen(onStart: () -> Unit, onBack: (() -> Unit)?, onClose: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val context = LocalContext.current
@@ -210,7 +210,7 @@ fun LivenessInstructionsScreen(onStart: () -> Unit, onBack: (() -> Unit)?, onClo
 
 
 @Composable
-fun InstructionItem(number: String, text: String, imageResId: Int? = null) {
+internal fun InstructionItem(number: String, text: String, imageResId: Int? = null) {
     Row(
         verticalAlignment = Alignment.Top, modifier = Modifier.padding(vertical = 8.dp)
     ) {
@@ -250,7 +250,7 @@ fun InstructionItem(number: String, text: String, imageResId: Int? = null) {
 
 
 @Composable
-fun WarningText() {
+internal fun WarningText() {
     val warningColor = if (isSystemInDarkTheme()) Color(0xFFd5ad66) else Color(0xFFB97700)
 
 

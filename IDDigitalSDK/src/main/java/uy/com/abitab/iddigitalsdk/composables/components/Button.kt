@@ -19,7 +19,7 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 import androidx.compose.material3.Button as MaterialButton
 
 @Composable
-fun Button(
+internal fun Button(
     modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit
@@ -40,7 +40,7 @@ fun Button(
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 @Composable
-fun ButtonPreview() {
+internal fun ButtonPreview() {
     AbitabTheme {
         Column(
             Modifier

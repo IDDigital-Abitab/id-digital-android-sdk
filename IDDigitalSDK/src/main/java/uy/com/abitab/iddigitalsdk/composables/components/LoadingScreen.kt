@@ -19,7 +19,7 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 
 @Preview()
 @Composable
-fun LoadingScreen() {
+internal fun LoadingScreen() {
     val spec = R.raw.loading
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(spec))
 

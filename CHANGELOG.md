@@ -2,6 +2,22 @@
 
 Todos los cambios notables de este SDK se documentan en este archivo.
 
+## Próxima versión
+
+### Breaking change: superficie pública previa a producción
+
+- Se elimina `sendToKeycloak()`. Ese método pertenecía al direct grant del POC y fue
+  reemplazado por el flujo vigente: `associate()` o `createValidationSession()`, seguido de
+  `completeTransaction()`.
+- Se eliminan la implementación `KeycloakService`, los entry points genéricos comentados
+  `executeChallenge()`/`validateChallenge()` y sus residuos internos.
+- El wrapper Java queda alineado con la API Kotlin: agrega deep link, QR, polling y
+  `completeTransaction()`. Las llamadas Java antes de `initialize()` informan
+  `NotInitializedError`.
+- Las clases de implementación pasan a ser internas. La API soportada queda limitada a
+  `IDDigitalSDK`, `IDDigitalSDKJavaWrapper`, sus modelos contractuales y la jerarquía de
+  errores.
+
 ## 3.1.0
 
 ### ✨ Nueva funcionalidad: `startActiveTransactionPolling()` / `stopActiveTransactionPolling()`

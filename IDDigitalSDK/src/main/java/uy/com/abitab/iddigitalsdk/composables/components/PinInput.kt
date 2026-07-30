@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 
 @Composable
-fun PinInputField(
+internal fun PinInputField(
     number: Int?,
     focusRequester: FocusRequester,
     onFocusChanged: (Boolean) -> Unit,

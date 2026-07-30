@@ -24,7 +24,7 @@ import uy.com.abitab.iddigitalsdk.presentation.pin.ui.screens.PinScreen
 
 
 @Composable
-fun DeviceAssociation(transactionId: String, context: Context, onClose: () -> Unit) {
+internal fun DeviceAssociation(transactionId: String, context: Context, onClose: () -> Unit) {
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
 

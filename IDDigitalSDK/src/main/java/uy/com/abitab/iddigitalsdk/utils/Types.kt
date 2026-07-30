@@ -1,5 +1,5 @@
 package uy.com.abitab.iddigitalsdk.utils
 
-data class ApiResponse<T>(
+internal data class ApiResponse<T>(
     val data: T,
 )

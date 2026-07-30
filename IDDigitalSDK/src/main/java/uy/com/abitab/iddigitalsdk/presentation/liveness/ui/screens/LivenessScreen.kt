@@ -13,13 +13,13 @@ import androidx.navigation.compose.rememberNavController
 import com.amplifyframework.ui.liveness.model.FaceLivenessDetectionException
 
 
-const val LivenessInstructionsScreen = "LivenessInstructionsScreen"
-const val LivenessDetectorScreen = "LivenessDetectorScreen"
-const val LivenessErrorScreen = "LivenessErrorScreen"
-const val LivenessCompletedScreen = "LivenessCompletedScreen"
+internal const val LivenessInstructionsScreen = "LivenessInstructionsScreen"
+internal const val LivenessDetectorScreen = "LivenessDetectorScreen"
+internal const val LivenessErrorScreen = "LivenessErrorScreen"
+internal const val LivenessCompletedScreen = "LivenessCompletedScreen"
 
 @Composable
-fun LivenessScreen(
+internal fun LivenessScreen(
     onClose: () -> Unit,
     onBack: (() -> Unit)? = null,
     onCompleted: () -> Unit,

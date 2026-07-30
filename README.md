@@ -5,7 +5,7 @@ SDK nativa de ID Digital para aplicaciones Android.
 ## Documentación
 
 La [guía de integración](../.docs/sdk/cliente/README.md) explica los flujos de
-autenticación y cuándo invocar cada operación. La referencia de API Kotlin se genera desde
+autenticación y cuándo invocar cada operación. La referencia de API Kotlin y Java se genera desde
 el KDoc de la superficie pública mediante Dokka.
 
 Requisito local: JDK 17.

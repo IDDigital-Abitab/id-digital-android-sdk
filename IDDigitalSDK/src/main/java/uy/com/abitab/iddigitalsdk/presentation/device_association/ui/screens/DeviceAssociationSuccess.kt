@@ -32,13 +32,13 @@ import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Preview(showBackground = true, device = "id:pixel_8_pro", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun DeviceAssociationSuccessPreview() {
+internal fun DeviceAssociationSuccessPreview() {
     DeviceAssociationSuccess({})
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeviceAssociationSuccess(onContinue: () -> Unit) {
+internal fun DeviceAssociationSuccess(onContinue: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
 

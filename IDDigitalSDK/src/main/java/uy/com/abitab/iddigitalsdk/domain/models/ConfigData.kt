@@ -1,6 +1,6 @@
 package uy.com.abitab.iddigitalsdk.domain.models
 
-data class ConfigData(
+internal data class ConfigData(
     val cognitoAppClientId: String,
     val cognitoUserPoolId: String,
     val cognitoIdentityPoolId: String,

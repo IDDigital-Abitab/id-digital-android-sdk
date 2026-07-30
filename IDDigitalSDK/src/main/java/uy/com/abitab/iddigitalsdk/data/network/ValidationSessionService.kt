@@ -14,7 +14,6 @@ import uy.com.abitab.iddigitalsdk.domain.models.CompleteTransactionResult
 import uy.com.abitab.iddigitalsdk.domain.models.DeviceAssociation
 import uy.com.abitab.iddigitalsdk.domain.models.PendingTransaction
 import uy.com.abitab.iddigitalsdk.domain.models.PendingTransactionsData
-import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
 import uy.com.abitab.iddigitalsdk.utils.ApiResponse
 import uy.com.abitab.iddigitalsdk.utils.BadResponseError
@@ -24,13 +23,12 @@ import uy.com.abitab.iddigitalsdk.utils.NetworkUtils
 import uy.com.abitab.iddigitalsdk.utils.NoInternetConnection
 import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.SessionHasUncompletedChallengesError
-import uy.com.abitab.iddigitalsdk.utils.TooManyAttemptsError
 import uy.com.abitab.iddigitalsdk.utils.TransactionNotFoundError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.ValidationSessionNotFoundError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
     suspend fun createDeviceAssociation(transactionId: String): ValidationSession =
         withContext(Dispatchers.IO) {
             if (!NetworkUtils.isInternetAvailable(context)) {
@@ -183,91 +181,6 @@ class ValidationSessionService(private val httpClient: OkHttpClient, private val
                 }
             } catch (e: Throwable) {
                 throw e.toIDDigitalError("Error in createDeviceAssociation")
-            }
-        }
-
-    suspend fun executeChallenge(challengeId: String, data: Record): Unit =
-        withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
-                throw NoInternetConnection()
-            }
-
-            val gson = Gson()
-            val json = gson.toJson(data)
-
-            val request =
-                Request.Builder().post(json.toRequestBody(JSON))
-                    .url(buildUrl("challenges/${challengeId}/execute/")).build()
-
-            try {
-                httpClient.newCall(request).execute().use { response ->
-                    val responseBody = response.body.string()
-                    if (!response.isSuccessful) {
-                        throw when (response.code) {
-                            in 500..599 -> ServiceUnavailableError(
-                                response.code, responseBody
-                            )
-
-                            400, 404 -> BadResponseError(
-                                response.code, responseBody
-                            )
-
-                            else -> UnexpectedResponseError(
-                                response.code, responseBody
-                            )
-                        }
-                    }
-
-                    return@withContext
-                }
-            } catch (e: Throwable) {
-                throw e.toIDDigitalError("Error in executeChallenge")
-            }
-        }
-
-    suspend fun validateChallenge(challengeId: String, data: Record): Boolean =
-        withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
-                throw NoInternetConnection()
-            }
-
-            val gson = Gson()
-            val json = gson.toJson(data)
-
-            val request = Request.Builder().post(json.toRequestBody(JSON))
-                .url(buildUrl("challenges/${challengeId}/validate/")).build()
-
-            try {
-                httpClient.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) {
-                        val responseBody = response.body.string()
-                        val jsonResponse = JSONObject(responseBody)
-                        // TODO improve this
-                        val backendErrorCode = jsonResponse.getString("code")
-                        if (backendErrorCode === "invalid-pin") {
-                            return@withContext false
-                        }
-                        if (backendErrorCode === "too-many-attempts") {
-                            throw TooManyAttemptsError(response.message)
-                        }
-                        throw when (response.code) {
-                            in 500..599 -> ServiceUnavailableError(
-                                response.code, responseBody
-                            )
-
-                            400, 404 -> BadResponseError(
-                                response.code, responseBody
-                            )
-
-                            else -> UnexpectedResponseError(
-                                response.code, responseBody
-                            )
-                        }
-                    }
-                    return@withContext true
-                }
-            } catch (e: Throwable) {
-                throw e.toIDDigitalError("Error in validateChallenge")
             }
         }
 

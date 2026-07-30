@@ -24,7 +24,7 @@ import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 import uy.com.abitab.iddigitalsdk.utils.UnknownError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-class DeviceAssociationViewModel(
+internal class DeviceAssociationViewModel(
     application: Application,
     private val createDeviceAssociationUseCase: CreateDeviceAssociationUseCase,
     private val completeDeviceAssociationUseCase: CompleteDeviceAssociationUseCase,
@@ -187,7 +187,7 @@ class DeviceAssociationViewModel(
     }
 }
 
-sealed class DeviceAssociationUiState {
+internal sealed class DeviceAssociationUiState {
     object Initial : DeviceAssociationUiState()
     object Loading : DeviceAssociationUiState()
     data class LaunchChallenge(val challenge: Challenge, val isRetry: Boolean = false) :

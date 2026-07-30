@@ -14,7 +14,7 @@ import uy.com.abitab.iddigitalsdk.data.network.ConfigService
 import java.nio.charset.Charset
 
 
-object AmplifyInitializer: AmplifyInitializerInterface, KoinComponent {
+internal object AmplifyInitializer: AmplifyInitializerInterface, KoinComponent {
     private val configService: ConfigService by inject()
 
     override suspend fun initialize(context: Context) {

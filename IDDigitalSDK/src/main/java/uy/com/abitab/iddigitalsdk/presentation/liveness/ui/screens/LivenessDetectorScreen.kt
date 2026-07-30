@@ -15,7 +15,7 @@ import com.amplifyframework.ui.liveness.ui.FaceLivenessDetector
 import uy.com.abitab.iddigitalsdk.ui.theme.AbitabTheme
 
 @Composable
-fun LivenessDetectorScreen(sessionId: String, onComplete : () -> Unit, onError : (error: FaceLivenessDetectionException) -> Unit) {
+internal fun LivenessDetectorScreen(sessionId: String, onComplete : () -> Unit, onError : (error: FaceLivenessDetectionException) -> Unit) {
     AbitabTheme {
         Box(
             modifier = Modifier

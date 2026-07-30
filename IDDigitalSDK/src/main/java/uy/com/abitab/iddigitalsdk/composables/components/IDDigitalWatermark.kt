@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import uy.com.abitab.iddigitalsdk.R
 
 @Composable
-fun IDDigitalWatermark() {
+internal fun IDDigitalWatermark() {
     Row(
         modifier = Modifier
             .padding(16.dp)

@@ -5,10 +5,9 @@ import uy.com.abitab.iddigitalsdk.data.network.ValidationSessionService
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.CompleteTransactionResult
 import uy.com.abitab.iddigitalsdk.domain.models.PendingTransaction
-import uy.com.abitab.iddigitalsdk.domain.models.Record
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
 
-class ValidationSessionRepositoryImpl(private val validationSessionService: ValidationSessionService) :
+internal class ValidationSessionRepositoryImpl(private val validationSessionService: ValidationSessionService) :
     ValidationSessionRepository {
 
     override suspend fun createDeviceAssociation(transactionId: String): ValidationSession {
@@ -34,12 +33,4 @@ class ValidationSessionRepositoryImpl(private val validationSessionService: Vali
     override suspend fun removeAssociation(): Unit {
         return validationSessionService.removeAssociation()
     }
-
-//    override suspend fun executeChallenge(challengeId: String, data: Record): Unit {
-//        return validationSessionService.executeChallenge(challengeId, data)
-//    }
-//
-//    override suspend fun validateChallenge(challengeId: String, data: Record): Boolean {
-//        return validationSessionService.validateChallenge(challengeId, data)
-//    }
 }

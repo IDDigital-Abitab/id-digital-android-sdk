@@ -10,7 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CompletableDeferred
 
-object PermissionsManager: PermissionsManagerInterface {
+internal object PermissionsManager: PermissionsManagerInterface {
 
     private const val CAMERA_PERMISSION = Manifest.permission.CAMERA
 

@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import uy.com.abitab.iddigitalsdk.utils.PinSecurityManager
 
-val Context.pinDataStore: DataStore<Preferences> by preferencesDataStore(name = "secure_pin_prefs")
+internal val Context.pinDataStore: DataStore<Preferences> by preferencesDataStore(name = "secure_pin_prefs")
 
-class PinDataStoreManager(private val context: Context) {
+internal class PinDataStoreManager(private val context: Context) {
 
     private val pinSecurityManager = PinSecurityManager()
 

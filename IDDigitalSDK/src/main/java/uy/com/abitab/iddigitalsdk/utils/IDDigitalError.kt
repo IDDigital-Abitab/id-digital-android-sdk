@@ -75,9 +75,6 @@ data class TooManyAttemptsError(val reason: String, override val message: String
 /** La operación requiere una asociación local que no existe o dejó de ser válida. */
 data class DeviceNotAssociatedError(override val message: String = "Device is not associated", override val cause: Throwable? = null) : IDDigitalError(message, cause)
 
-/** El ciudadano no cumple las condiciones para asociar este dispositivo. */
-data class UserCannotBeAssociatedError(override val message: String = "User cannot be associated", override val cause: Throwable? = null) : IDDigitalError(message, cause)
-
 /**
  * El identificador de desafío no existe o no puede utilizarse.
  *
@@ -125,7 +122,7 @@ data class UnknownError(override val message: String, override val cause: Throwa
  *
  * @suppress
  */
-fun Throwable.toIDDigitalError(context: String = "Unknown error"): IDDigitalError = when (this) {
+internal fun Throwable.toIDDigitalError(context: String = "Unknown error"): IDDigitalError = when (this) {
     is IDDigitalError -> this
     is UnknownHostException -> UnknownHostError(cause = this)
     is SocketTimeoutException -> TimeoutError(cause = this)

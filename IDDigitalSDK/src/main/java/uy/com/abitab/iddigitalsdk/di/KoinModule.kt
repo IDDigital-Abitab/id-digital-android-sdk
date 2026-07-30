@@ -10,7 +10,6 @@ import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.dsl.module
 import uy.com.abitab.iddigitalsdk.data.PinDataStoreManager
 import uy.com.abitab.iddigitalsdk.data.network.ConfigService
-import uy.com.abitab.iddigitalsdk.data.network.KeycloakService
 import uy.com.abitab.iddigitalsdk.data.network.LivenessService
 import uy.com.abitab.iddigitalsdk.data.network.PinService
 import uy.com.abitab.iddigitalsdk.data.network.ValidationSessionService
@@ -25,11 +24,9 @@ import uy.com.abitab.iddigitalsdk.domain.usecases.CompleteTransactionUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateDeviceAssociationUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.CreateValidationSessionUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.GetPendingTransactionsUseCase
-//import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecuteLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ExecutePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.RemoveAssociationUseCase
-//import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidateLivenessChallengeUseCase
 import uy.com.abitab.iddigitalsdk.domain.usecases.ValidatePinChallengeUseCase
 import uy.com.abitab.iddigitalsdk.presentation.device_association.ui.viewmodels.DeviceAssociationViewModel
@@ -81,8 +78,6 @@ internal fun sdkModule() = module {
     single { PinService(get(), get()) }
     single { ValidationSessionService(get(), get()) }
     single { ConfigService(get()) }
-    single { KeycloakService(get(), get()) }
-
     // --- REPOSITORIES ---
     single<LivenessRepository> { LivenessRepositoryImpl(get()) }
     single<PinRepository> { PinRepositoryImpl(get()) }
@@ -104,8 +99,6 @@ internal fun sdkModule() = module {
     factory { CreateValidationSessionUseCase(get(), Dispatchers.IO) }
     factory { CompleteTransactionUseCase(get(), Dispatchers.IO) }
     factory { GetPendingTransactionsUseCase(get(), Dispatchers.IO) }
-//    factory { ExecuteChallengeUseCase(get(), Dispatchers.IO) }
-//    factory { ValidateChallengeUseCase(get(), Dispatchers.IO) }
 
     // active transaction polling (canal redundante al push)
     single { ActiveTransactionPoller(androidContext(), get()) }

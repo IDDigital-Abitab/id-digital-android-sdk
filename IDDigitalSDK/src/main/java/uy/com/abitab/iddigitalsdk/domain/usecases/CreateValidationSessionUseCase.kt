@@ -6,7 +6,7 @@ import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.domain.models.ValidationSession
 import uy.com.abitab.iddigitalsdk.domain.repositories.ValidationSessionRepository
 
-class CreateValidationSessionUseCase(
+internal class CreateValidationSessionUseCase(
     private val validationSessionRepository: ValidationSessionRepository,
     private val dispatcher: CoroutineDispatcher,
 ) {
