@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import uy.com.abitab.iddigitalsdk.IDDigitalSDK
 
 /**
- * Deep link same-device del puente web (ver .docs/sdk/cliente/07-deep-link-same-device.md).
+ * Deep link same-device del puente web (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md).
  * A diferencia del push, la app decide localmente si asociar o validar (ver
  * LaunchedEffect en PendingVerificationFlow.kt). transactionId es el único dato que
  * viaja como query param: el backend resuelve al ciudadano desde la transacción (via

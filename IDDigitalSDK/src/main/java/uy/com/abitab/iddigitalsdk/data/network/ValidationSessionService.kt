@@ -267,7 +267,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
      * Lists pending OIDC transactions for the citizen behind the current
      * DeviceAssociation (bearer token added by the OkHttp interceptor, see
      * KoinModule). Used by [IDDigitalSDK.startActiveTransactionPolling] -
-     * .docs/sdk/cliente/09-polling-transaccion-activa.md.
+     * .docs/sdk/cliente/05-polling-transaccion-activa.md.
      */
     suspend fun getPendingTransactions(): List<PendingTransaction> =
         withContext(Dispatchers.IO) {

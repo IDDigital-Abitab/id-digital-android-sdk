@@ -33,7 +33,7 @@ import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 /**
  * QR cross-device variant of `ValidationSession.kt` (validation_session
  * package): identical challenge flow (liveness/pin), reusing
- * [ValidationSessionViewModel] unchanged - see .docs/sdk/cliente/08-qr-cross-device.md.
+ * [ValidationSessionViewModel] unchanged - see .docs/sdk/cliente/01-arquitectura-y-flujos.md.
  *
  * The only differences are: it starts with a QR scan step to obtain the
  * `transactionId` (an opaque signed token, never parsed/validated here), and

@@ -18,7 +18,7 @@ import uy.com.abitab.iddigitalsdk.domain.usecases.GetPendingTransactionsUseCase
 /**
  * Polling de "transacción activa": canal redundante al push que replica el
  * mecanismo ya usado por la app default de ID Digital (ver
- * .docs/sdk/cliente/09-polling-transaccion-activa.md). Solo cubre login
+ * .docs/sdk/cliente/05-polling-transaccion-activa.md). Solo cubre login
  * recurrente (validation): un dispositivo sin asociar no tiene bearer token
  * contra el cual preguntar, así que mientras no haya asociación el polling
  * queda en espera silenciosa (no es un error).

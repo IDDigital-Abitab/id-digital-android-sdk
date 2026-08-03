@@ -19,7 +19,7 @@ import uy.com.abitab.iddigitalsdk.utils.InvalidDocumentError
 
 /**
  * Hosts [QrValidationFlow] - QR cross-device validation for an already
- * associated device, see .docs/sdk/cliente/08-qr-cross-device.md. Mirrors
+ * associated device, see .docs/sdk/cliente/01-arquitectura-y-flujos.md. Mirrors
  * `QrAssociationActivity` (qr_association package) closely on purpose: same
  * extra handling, same edge-to-edge setup.
  */

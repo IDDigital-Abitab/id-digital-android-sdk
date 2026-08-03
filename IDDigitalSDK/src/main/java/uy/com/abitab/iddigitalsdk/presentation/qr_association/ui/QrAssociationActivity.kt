@@ -15,7 +15,7 @@ import uy.com.abitab.iddigitalsdk.presentation.qr_association.ui.screens.QrAssoc
 
 /**
  * Hosts [QrAssociationFlow] - QR cross-device association+login (registro
- * reducido), see .docs/sdk/cliente/08-qr-cross-device.md. No identification
+ * reducido), see .docs/sdk/cliente/01-arquitectura-y-flujos.md. No identification
  * parameter is required to launch this flow: the citizen's identity is only
  * revealed once the QR is scanned (the transactionId encoded in it), so the
  * app never needs to know the document beforehand - see [QrAssociationFlow].

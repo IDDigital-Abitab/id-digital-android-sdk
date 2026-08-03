@@ -84,7 +84,8 @@ object IDDigitalSDKJavaWrapper {
      * @param environment ambiente de ID Digital.
      * @param onError listener de error.
      * @param onCompleted listener invocado cuando la SDK queda lista.
-     * @param baseUrl URL alternativa reservada para desarrollo.
+     * @param baseUrl URL alternativa reservada para desarrollo interno. En una integración
+     * normal debe permanecer en `null`.
      */
     @JvmStatic
     @JvmOverloads

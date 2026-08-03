@@ -31,7 +31,7 @@ import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 /**
  * QR cross-device variant of `DeviceAssociation.kt` (device_association
  * package): identical challenge flow (instructions -> liveness/pin), reusing
- * [DeviceAssociationViewModel] unchanged - see .docs/sdk/cliente/08-qr-cross-device.md.
+ * [DeviceAssociationViewModel] unchanged - see .docs/sdk/cliente/01-arquitectura-y-flujos.md.
  *
  * The only differences are: it starts with a QR scan step to obtain the
  * `transactionId` (an opaque signed token, never parsed/validated here) -

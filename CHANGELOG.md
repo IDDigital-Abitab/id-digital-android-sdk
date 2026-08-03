@@ -18,7 +18,7 @@ Todos los cambios notables de este SDK se documentan en este archivo.
   `IDDigitalSDK`, `IDDigitalSDKJavaWrapper`, sus modelos contractuales y la jerarquía de
   errores.
 
-## 3.1.0
+## 3.1.0 (próximo tag)
 
 ### ✨ Nueva funcionalidad: `startActiveTransactionPolling()` / `stopActiveTransactionPolling()`
 
@@ -27,13 +27,13 @@ pendiente sin depender de la notificación, replicando el mecanismo que ya usa l
 default de ID Digital. Solo cubre login recurrente (`validation`) — sin asociación
 local no hay bearer token contra el cual preguntar, así que mientras no exista el
 polling queda en espera silenciosa (no es un error). Ver
-[`.docs/sdk/cliente/09-polling-transaccion-activa.md`](../.docs/sdk/cliente/09-polling-transaccion-activa.md).
+[`.docs/sdk/cliente/05-polling-transaccion-activa.md`](../.docs/sdk/cliente/05-polling-transaccion-activa.md).
 
 ```kotlin
 sdk.startActiveTransactionPolling(
     intervalMs = 10_000L, // opcional, este es el default
     onTransactionDetected = { transactionId ->
-        // Mismo manejo que type: "validation" por push (ver 04-invocacion-sdk.md)
+        // Mismo manejo que type: "validation" por push (ver 04-integracion-sdk.md)
     }
 )
 
@@ -47,7 +47,7 @@ hay que volver a llamar `startActiveTransactionPolling` para habilitarlo de nuev
 **Nueva dependencia:** `androidx.lifecycle:lifecycle-process` (para observar
 `ProcessLifecycleOwner` y pausar el polling en background).
 
-## 3.0.0
+## 3.0.0 (próximo tag)
 
 ### ⚠️ Breaking change
 
@@ -97,7 +97,7 @@ viva ya garantiza que el citizen existe) y se elimina.
 
 1. Dejar de construir `Document` para `associate()`/`associateViaQrScan()`: pasar el
    `transactionId` que la app ya recibe por push (en crudo), deep link same-device o QR
-   (token firmado) — ver [`04-invocacion-sdk.md`](../.docs/sdk/cliente/04-invocacion-sdk.md).
+   (token firmado) — ver [`04-integracion-sdk.md`](../.docs/sdk/cliente/04-integracion-sdk.md).
 2. Eliminar cualquier llamada a `canAssociate()`.
 3. El endpoint de push hacia el Integrador (`03-endpoint-push.md`) no cambia — sigue
    enviando `documentNumber`/`documentType`/`documentCountry` porque el Integrador los
@@ -110,7 +110,7 @@ viva ya garantiza que el citizen existe) y se elimina.
 `createValidationSession()`/`validateViaQrScan()` (validación recurrente) no cambian: esa
 rama nunca recibió `Document`.
 
-## 2.0.0
+## 2.0.0 (próximo tag)
 
 ### ⚠️ Breaking change
 
@@ -130,7 +130,7 @@ documento, así que cualquier persona con pasaporte (`psp`) o documento no-UY
 (`AR`/`BR`/`CL`/`PY`) fallaba silenciosamente al asociar dispositivo (`can_associate`/
 `createDeviceAssociation` no encontraban al citizen real). Ver
 [`.docs/sdk/cliente/03-endpoint-push.md`](../.docs/sdk/cliente/03-endpoint-push.md) y
-[`04-invocacion-sdk.md`](../.docs/sdk/cliente/04-invocacion-sdk.md).
+[`04-integracion-sdk.md`](../.docs/sdk/cliente/04-integracion-sdk.md).
 
 **Migración para Integradores:**
 
@@ -138,7 +138,7 @@ documento, así que cualquier persona con pasaporte (`psp`) o documento no-UY
    en el push de asociación (`type="association"`, ver `03-endpoint-push.md`) hacia la
    app.
 2. Si se usa el deep link same-device, leer los nuevos query params `documentType`/
-   `documentCountry` (ver [`06-deep-link-same-device.md`](../.docs/sdk/cliente/06-deep-link-same-device.md)) -
+   `documentCountry` (ver [`01-arquitectura-y-flujos.md`](../.docs/sdk/cliente/01-arquitectura-y-flujos.md)) -
    no requiere ningún método nuevo de la SDK, son query params planos de la URL.
 3. Actualizar toda construcción de `Document(...)` para pasar `type`/`country` reales -
    ya no hay valor por defecto.
@@ -151,7 +151,7 @@ recibió `Document`, un dispositivo ya asociado no necesita reenviar su document
 Registro reducido cuando no hay asociación (el Integrador no reconoce al citizen, o el
 Usuario elige registrarse directamente): la SDK presenta su propia pantalla de cámara,
 decodifica un QR mostrado por el navegador y completa la asociación + login sin salir de
-la app. Ver [`.docs/sdk/cliente/08-qr-cross-device.md`](../.docs/sdk/cliente/08-qr-cross-device.md).
+la app. Ver [`.docs/sdk/cliente/01-arquitectura-y-flujos.md`](../.docs/sdk/cliente/01-arquitectura-y-flujos.md).
 
 ```kotlin
 sdk.associateViaQrScan(
@@ -172,7 +172,7 @@ Simétrico a `associateViaQrScan()`, pero para un dispositivo **ya asociado**: r
 primer paso de `createValidationSession(type)` en vez de `associate()`. No requiere
 `Document` — la asociación local ya identifica al citizen. Si `isAssociated()` es `false`,
 falla con `DeviceNotAssociatedError` antes de abrir la cámara. Ver
-[`.docs/sdk/cliente/08-qr-cross-device.md`](../.docs/sdk/cliente/08-qr-cross-device.md).
+[`.docs/sdk/cliente/01-arquitectura-y-flujos.md`](../.docs/sdk/cliente/01-arquitectura-y-flujos.md).
 
 ```kotlin
 sdk.validateViaQrScan(
@@ -183,6 +183,6 @@ sdk.validateViaQrScan(
 )
 ```
 
-## 1.0.0
+## v1.0.0
 
 Versión inicial.

@@ -1,3 +1,5 @@
 # Copy to local.properties (not committed). Android Studio usually adds sdk.dir.
 # Required for the sample app :app module BuildConfig.API_KEY.
+SDK_ENVIRONMENT=STAGING
 API_KEY=
+API_BASE_URL=

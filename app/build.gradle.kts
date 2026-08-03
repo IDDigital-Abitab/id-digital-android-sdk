@@ -14,6 +14,14 @@ if (localPropertiesFile.exists()) {
 }
 val apiKey = localProperties.getProperty("API_KEY") ?: ""
 val apiBaseUrl = localProperties.getProperty("API_BASE_URL") ?: ""
+val sdkEnvironment = localProperties.getProperty("SDK_ENVIRONMENT")
+    ?.trim()
+    ?.uppercase()
+    ?.ifEmpty { "STAGING" }
+    ?: "STAGING"
+require(sdkEnvironment == "STAGING" || sdkEnvironment == "PRODUCTION") {
+    "SDK_ENVIRONMENT must be STAGING or PRODUCTION, but was '$sdkEnvironment'"
+}
 
 // Configuracion del cliente Keycloak usado por el login del Patron B (puente web).
 // client_id/redirect_uri son especificos de lo que se registre en Keycloak para esta
@@ -37,6 +45,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "SDK_ENVIRONMENT", "\"$sdkEnvironment\"")
         buildConfigField("String", "KEYCLOAK_BASE_URL", "\"$keycloakBaseUrl\"")
         buildConfigField("String", "KEYCLOAK_REALM", "\"$keycloakRealm\"")
         buildConfigField("String", "KEYCLOAK_CLIENT_ID", "\"$keycloakClientId\"")

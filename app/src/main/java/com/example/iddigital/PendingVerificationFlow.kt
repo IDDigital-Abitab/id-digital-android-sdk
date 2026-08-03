@@ -48,7 +48,7 @@ import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
 /**
  * Tipo de aviso recibido, por push (ver .docs/sdk/cliente/03-endpoint-push.md) o por
- * deep link same-device (ver .docs/sdk/cliente/07-deep-link-same-device.md). El push
+ * deep link same-device (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md). El push
  * llega con el tipo ya resuelto por el backend del integrador; el deep link solo trae
  * transactionId, así que el tipo se decide localmente con sdkInstance.isAssociated().
  */
@@ -128,9 +128,9 @@ private fun KeycloakLoginSection(keycloakRedirect: KeycloakRedirectResult?) {
  * recibe el transactionId/type que en producción llegan por push (ver
  * .docs/sdk/cliente/03-endpoint-push.md) — automáticamente si llega un [incomingPush]
  * (ver IDDigitalSampleFcmService) o un [incomingDeepLink] same-device (ver
- * .docs/sdk/cliente/07-deep-link-same-device.md), o a mano si se completa el campo sin
+ * .docs/sdk/cliente/01-arquitectura-y-flujos.md), o a mano si se completa el campo sin
  * push — y orquesta asociación o validación seguida de completeTransaction(), igual que el
- * código de referencia de .docs/sdk/cliente/04-invocacion-sdk.md. El backend resuelve al
+ * código de referencia de .docs/sdk/cliente/04-integracion-sdk.md. El backend resuelve al
  * ciudadano desde esta transacción, así que no hace falta ningún dato de documento acá.
  * Al completar, si el backend devolvió finishUrl, lo abre con el abridor de URLs del
  * sistema en vez de depender del polling del browser en background.
@@ -186,7 +186,7 @@ fun PendingVerificationFlow(
                     Toast.makeText(context, "Transacción completada", Toast.LENGTH_SHORT).show()
                     // Solo same-device (deep link o esta prueba manual, ver openFinishUrl en
                     // los callers): abrimos finishUrl nosotros en vez de depender del tab del
-                    // browser, ver .docs/sdk/cliente/07-deep-link-same-device.md. Un push real
+                    // browser, ver .docs/sdk/cliente/01-arquitectura-y-flujos.md. Un push real
                     // puede ser cross-device - ahí el browser original es el único que tiene
                     // la cookie de sesión correcta para login-actions/authenticate en Keycloak,
                     // y su propio polling ya hace este mismo redirect; si el teléfono también
@@ -248,7 +248,7 @@ fun PendingVerificationFlow(
         }
     }
 
-    // Fallback QR cross-device (ver .docs/sdk/cliente/08-qr-cross-device.md): el SPA lo
+    // Fallback QR cross-device (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md): el SPA lo
     // ofrece cuando el push (de asociación o de validación) no se pudo confirmar entregado
     // (sdk_push_failed=true). associateViaQrScan()/validateViaQrScan() reemplazan el paso
     // de asociar()/createValidationSession() — decodifican el transactionId desde la
@@ -313,7 +313,7 @@ fun PendingVerificationFlow(
     // documentNumber/Type/Country del payload solo le sirven al backend del Integrador para
     // decidir a qué dispositivo notificar (.docs/sdk/cliente/03-endpoint-push.md), no a la
     // SDK. openFinishUrl=false: un push puede ser cross-device (el caso típico, ver
-    // .docs/sdk/cliente/07-deep-link-same-device.md), y el browser original ya completa el
+    // .docs/sdk/cliente/01-arquitectura-y-flujos.md), y el browser original ya completa el
     // login por su propio polling — abrir finishUrl también desde el teléfono compite por la
     // misma sesión de Keycloak (ver comentario en completeTransaction más abajo).
     LaunchedEffect(incomingPush) {
@@ -452,7 +452,7 @@ fun PendingVerificationFlow(
             "Independiente de todo lo anterior: no requiere transactionId ni haber " +
                 "recibido una push. El SPA ofrece este QR en la pantalla de espera " +
                 "cuando la push (de asociación o de validación) no se pudo confirmar " +
-                "entregada (sdk_push_failed) — ver .docs/sdk/cliente/08-qr-cross-device.md. " +
+                "entregada (sdk_push_failed) — ver .docs/sdk/cliente/01-arquitectura-y-flujos.md. " +
                 "El camino se decide según el estado local del dispositivo, no según el " +
                 "tipo de transacción pendiente: si ya está asociado, se valida; si no, se " +
                 "asocia. La SDK escanea el token con su propia cámara y hace todo el resto " +

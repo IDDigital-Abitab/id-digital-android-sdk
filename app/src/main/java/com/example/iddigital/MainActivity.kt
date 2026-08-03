@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
             sdkInstance = IDDigitalSDK.initialize(
                 this,
                 apiKey,
-                environment = IDDigitalSDKEnvironment.STAGING,
+                environment = IDDigitalSDKEnvironment.valueOf(BuildConfig.SDK_ENVIRONMENT),
                 onError = {},
                 onCompleted = {},
                 baseUrl = BuildConfig.API_BASE_URL.ifBlank { null },
@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
      * terceros (ver parseIdDigitalCallback - llega asi solo si ese Keycloak fuerza ese
      * patron; no aplica con la configuracion recomendada, ver
      * .docs/sdk/cliente/02-configuracion-keycloak.md), el deep link same-device del puente
-     * web (ver .docs/sdk/cliente/07-deep-link-same-device.md) y, si la app se abrió tocando
+     * web (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md) y, si la app se abrió tocando
      * la notificación del push cross-device (ver IDDigitalSampleFcmService), los datos de
      * esa transacción pendiente.
      */

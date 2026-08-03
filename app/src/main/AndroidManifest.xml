@@ -36,7 +36,7 @@
                 <data android:scheme="iddigitalsample" android:host="auth" />
             </intent-filter>
             <!-- Deep link same-device del puente web, ver
-                 .docs/sdk/cliente/07-deep-link-same-device.md. El scheme debe coincidir con
+                 .docs/sdk/cliente/01-arquitectura-y-flujos.md. El scheme debe coincidir con
                  sdk.Client.android_deep_link_url configurado en el backend para este cliente. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

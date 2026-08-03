@@ -52,7 +52,7 @@ import java.util.concurrent.Executors
 
 /**
  * QR cross-device scan step for [uy.com.abitab.iddigitalsdk.IDDigitalSDK.associateViaQrScan]
- * (.docs/sdk/cliente/08-qr-cross-device.md). Decodes a QR code shown by the web
+ * (.docs/sdk/cliente/01-arquitectura-y-flujos.md). Decodes a QR code shown by the web
  * bridge (SPA) and reports its raw text via [onScanned] - the SDK never
  * parses/validates that value, it's an opaque signed token the backend will
  * verify later in `completeTransaction`.

@@ -70,15 +70,16 @@ class IDDigitalSDK private constructor() {
          * Inicializa la SDK y devuelve su instancia compartida.
          *
          * Debe invocarse una sola vez al iniciar la aplicación. Las invocaciones posteriores
-         * devuelven la misma instancia y no repiten la inicialización.
+         * devuelven la misma instancia y conservan el ambiente y la API key de la primera
+         * inicialización.
          *
          * @param context contexto de la aplicación o de una actividad.
          * @param apiKey credencial de la integración entregada por ID Digital.
          * @param environment ambiente de ID Digital contra el que operará la SDK.
          * @param onError se invoca si falla la inicialización de los servicios requeridos.
          * @param onCompleted se invoca cuando la SDK queda lista para operar.
-         * @param baseUrl URL base alternativa reservada para desarrollo y pruebas. En una
-         * integración normal debe permanecer en `null`.
+         * @param baseUrl URL base alternativa reservada para desarrollo interno y pruebas. En
+         * una integración normal debe permanecer en `null`.
          * @return la instancia compartida de [IDDigitalSDK].
          */
         fun initialize(

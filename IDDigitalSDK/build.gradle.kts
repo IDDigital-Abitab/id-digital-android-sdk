@@ -10,6 +10,10 @@ plugins {
     id("com.google.protobuf") version "0.9.4"
 }
 
+val sdkVersion = providers.gradleProperty("VERSION_NAME")
+    .orElse(providers.environmentVariable("VERSION"))
+    .getOrElse("0.0.0-SNAPSHOT")
+
 tasks.named<DokkaTask>("dokkaHtml") {
     moduleName.set("ID Digital SDK")
     outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
@@ -46,7 +50,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "uy.com.abitab"
                 artifactId = "iddigitalsdk"
-                version = "2.0.0"
+                version = sdkVersion
             }
         }
     }
@@ -117,7 +121,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.lottie.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    // Active-transaction polling (ProcessLifecycleOwner) - .docs/sdk/cliente/09-polling-transaccion-activa.md
+    // Active-transaction polling (ProcessLifecycleOwner) - .docs/sdk/cliente/05-polling-transaccion-activa.md
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.material.icons.extended)
 
@@ -132,7 +136,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.biometric)
 
-    // QR cross-device (associateViaQrScan) - .docs/sdk/cliente/08-qr-cross-device.md
+    // QR cross-device (associateViaQrScan) - .docs/sdk/cliente/01-arquitectura-y-flujos.md
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

@@ -9,6 +9,7 @@ Tiene Firebase Cloud Messaging configurado (proyecto propio, dedicado a esta app
 Completar `local.properties` (no se versiona) en la raíz de `id-digital-android-sdk/`:
 
 ```properties
+SDK_ENVIRONMENT=STAGING
 API_KEY=<api key del sdk.Client de prueba, entregado por ID Digital>
 API_BASE_URL=<opcional, ver abajo>
 KEYCLOAK_BASE_URL=https://bqm-keycloak-dev.alabamasolutions.com
@@ -17,10 +18,13 @@ KEYCLOAK_CLIENT_ID=<client_id habilitado en ese realm para esta app>
 KEYCLOAK_REDIRECT_URI=iddigitalsample://auth
 ```
 
+- `SDK_ENVIRONMENT` acepta `STAGING` (default si se omite) o `PRODUCTION`. Debe corresponder al ambiente de `API_KEY` y del Keycloak configurado; cualquier otro valor hace fallar el build.
 - `KEYCLOAK_BASE_URL` y `KEYCLOAK_REALM` tienen default en el build (`app/build.gradle.kts`) apuntando al staging ya usado por la SDK; solo hace falta sobreescribirlos si se prueba contra otro ambiente.
 - `KEYCLOAK_CLIENT_ID` no tiene default: hay que registrar un client en ese realm y completar acá su id. Ese client no debe agregarse a `MOBILE_CLIENTS` (ni a ningún mecanismo equivalente de ese Keycloak para clients móviles nativos): el flujo estándar del SDK usa el `redirect_uri` HTTPS normal, sin deep links nativos ni pasos adicionales (ver [`02-configuracion-keycloak.md`](../../.docs/sdk/cliente/02-configuracion-keycloak.md)).
 - `KEYCLOAK_REDIRECT_URI` debe coincidir con el intent-filter de `AndroidManifest.xml` (`iddigitalsample://auth`) y estar registrado como redirect URI válido de ese client en Keycloak.
-- `API_BASE_URL` es opcional: sin ella, la SDK usa `IDDigitalSDKEnvironment.STAGING` (hardcodeado en `MainActivity.kt`), que apunta a `auth.identificaciondigital.com.uy`. Para que `associate()`/`createValidationSession()`/`completeTransaction()` hablen con un backend propio (ej. un `id-2.0-backend` de desarrollo, docker-compose local, o el droplet compartido de DigitalOcean — ver [`.docs/sdk/entorno-desarrollo-digitalocean.md`](../../.docs/sdk/entorno-desarrollo-digitalocean.md)), completarla con `http://<host>/api/v2/sdk` — debe ser el **mismo** backend contra el que corre el login de Keycloak/mock BQM, o `completeTransaction()` va a fallar (el `transactionId` no existiría ahí). Si el host usa HTTP plano (no HTTPS), agregarlo también a [`network_security_config.xml`](src/main/res/xml/network_security_config.xml).
+- `API_BASE_URL` es un override opcional reservado para desarrollo interno. Sin ella, la SDK resuelve la URL oficial desde `SDK_ENVIRONMENT`. Para que `associate()`/`createValidationSession()`/`completeTransaction()` hablen con un backend propio (ej. un `id-2.0-backend` de desarrollo, docker-compose local, o el droplet compartido de DigitalOcean — ver [`.docs/sdk/entorno-desarrollo-digitalocean.md`](../../.docs/sdk/entorno-desarrollo-digitalocean.md)), completarla con `http://<host>/api/v2/sdk` — debe ser el **mismo** backend contra el que corre el login de Keycloak/mock BQM, o `completeTransaction()` va a fallar (el `transactionId` no existiría ahí). Si el host usa HTTP plano (no HTTPS), agregarlo también a [`network_security_config.xml`](src/main/res/xml/network_security_config.xml).
+
+Al cambiar manualmente de `STAGING` a `PRODUCTION` con el mismo `applicationId`, borrar los datos de la app o reinstalarla antes de probar. Esto evita reutilizar una asociación local creada contra el ambiente anterior.
 
 ## Cómo correr el flujo completo (con push real)
 
@@ -35,19 +39,19 @@ Firebase (`SDK_MOCK_BQM_FCM_TEST_DEVICE_TOKEN` + `service-account-mock-bqm.json`
 
 ## Cómo probar el fallback QR cross-device
 
-Ver [`08-qr-cross-device.md`](../../.docs/sdk/cliente/08-qr-cross-device.md) para el flujo completo. El SPA ofrece el QR cuando la push (de asociación **o** de validación) no se pudo confirmar entregada (`sdk_push_failed=true`, ver [`sdk/tasks.py`](../../id-2.0-backend/backend/sdk/tasks.py)), así que para forzarlo en dev sin depender de una falla real de FCM:
+Ver [`01-arquitectura-y-flujos.md`](../../.docs/sdk/cliente/01-arquitectura-y-flujos.md) para el flujo completo. El SPA ofrece el QR cuando la push (de asociación **o** de validación) no se pudo confirmar entregada (`sdk_push_failed=true`, ver [`sdk/tasks.py`](../../id-2.0-backend/backend/sdk/tasks.py)), así que para forzarlo en dev sin depender de una falla real de FCM:
 
 1. En Django Admin → SDK → Clients, apuntar temporalmente `push_endpoint_url` del `sdk.Client` de prueba a una URL que devuelva `404` (o dejarlo vacío/inválido para que se agoten los reintentos) — cualquiera de los dos casos deja la transacción `IN_PROGRESS` con `sdk_push_failed=true` en vez de fallarla.
 2. **Iniciar sesión con Keycloak** desde un navegador (puede ser en la laptop, para probar el caso cross-device real). El backend crea la transacción pendiente y, al no poder confirmar la push, la pantalla de espera muestra el QR en el siguiente polling.
 3. En el teléfono (dispositivo físico, requiere cámara), abrir esta app de ejemplo. La sección **"Fallback QR cross-device"** (debajo de "Resolver verificación pendiente", pero independiente de ella — no usa `transactionId` ni depende de que haya llegado una push) enruta sola según si el dispositivo ya tiene una asociación local:
-   - **Sin asociación local:** muestra campos de documento (`documentType`/`documentCountry` precargados con `ci`/`UY`; completá `documentNumber` con el documento real del citizen que va a escanear) y el botón **"Escanear QR (asociación)"**. Alternativamente, "Asociar vía QR" en "Herramientas / debug" hace lo mismo.
+   - **Sin asociación local:** muestra el botón **"Escanear QR (asociación)"**. Alternativamente, "Asociar vía QR" en "Herramientas / debug" hace lo mismo. No requiere ingresar un documento.
    - **Con asociación local:** muestra un picker Pin/Liveness y el botón **"Escanear QR (validación)"**. Alternativamente, "Validar Pin/Liveness vía QR" en "Herramientas / debug" hace lo mismo.
 4. Tocar el botón correspondiente y apuntar la cámara al QR mostrado en el navegador. La SDK decodifica el token, corre Liveness/PIN, y cierra la transacción internamente — no hace falta llamar `completeTransaction()` por separado.
 5. El navegador (todavía en la pantalla de espera) debería reflejar el login como autorizado en el siguiente polling; el `finishUrl` que recibe la app es solo informativo y nunca se abre ahí, porque este camino es siempre cross-device.
 
 Para probar específicamente el camino de **validación** (paso 3, con asociación local): usar un teléfono que ya completó el flujo de asociación anteriormente (con o sin QR) antes de repetir los pasos 1-2 con una nueva transacción — el login del paso 2 puede ser el mismo citizen o cualquier otro, lo único que determina el camino es si el teléfono tiene asociación local, no de quién es la transacción pendiente detrás del QR.
 
-**Por qué pide un documento solo en el camino de asociación:** el QR solo resuelve *cómo llega el `transactionId`* (por cámara en vez de por push); quién es el ciudadano para el desafío de Liveness/PIN es un problema aparte, y `Document` no tiene default para `type`/`country` en ningún método de la SDK (ver [`04-invocacion-sdk.md`](../../.docs/sdk/cliente/04-invocacion-sdk.md)). En un Integrador real ese documento ya está en el perfil logueado del citizen — la app de ejemplo lo pide a mano solo porque no tiene ningún sistema de usuarios propio. En el camino de validación no hace falta: la asociación local ya identifica al citizen.
+**Por qué no pide un documento:** desde v3.0.0, `associateViaQrScan()` obtiene el token desde el QR y el backend resuelve al citizen desde la transacción asociada. La app no construye ni envía un `Document` (ver [`04-integracion-sdk.md`](../../.docs/sdk/cliente/04-integracion-sdk.md)). En el camino de validación, la asociación local identifica al citizen.
 
 ## Sección "Herramientas / debug"
 
