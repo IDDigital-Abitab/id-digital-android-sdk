@@ -53,6 +53,12 @@ afterEvaluate {
                 version = sdkVersion
             }
         }
+        repositories {
+            maven {
+                name = "LocalDist"
+                url = uri(layout.buildDirectory.dir("repo"))
+            }
+        }
     }
 }
 

@@ -1,0 +1,42 @@
+name: Release SDK (Distribution)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version del SDK (ej. 1.0.0)'
+        required: true
+        type: string
+      repo_url:
+        description: 'URL del repositorio de distribucion (incluyendo el https://)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish AAR to Distribution Repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Run Export and Publish Script
+        env:
+          GH_TOKEN: ${{ secrets.DISTRIBUTION_PAT }}
+        run: |
+          AUTH_REPO_URL="${{ github.event.inputs.repo_url }}"
+          if [[ "$AUTH_REPO_URL" == https://* ]]; then
+            AUTH_REPO_URL="${AUTH_REPO_URL/https:\/\//https:\/\/oauth2:${{ secrets.DISTRIBUTION_PAT }}@}"
+          fi
+          ./scripts/export_and_publish.sh "${{ github.event.inputs.version }}" "$AUTH_REPO_URL"

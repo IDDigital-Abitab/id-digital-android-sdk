@@ -11,11 +11,11 @@ import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType;
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError;
 import uy.com.abitab.iddigitalsdk.utils.NotInitializedError;
 
-public class IDDigitalSDKJavaWrapperTest {
+public class IDDigitalClientJavaWrapperTest {
 
     @Before
     public void resetSdk() throws Exception {
-        Field sdk = IDDigitalSDKJavaWrapper.class.getDeclaredField("sdk");
+        Field sdk = IDDigitalClientJavaWrapper.class.getDeclaredField("sdk");
         sdk.setAccessible(true);
         sdk.set(null, null);
     }
@@ -24,7 +24,7 @@ public class IDDigitalSDKJavaWrapperTest {
     public void reportsNotInitializedBeforeUsingSdk() {
         final IDDigitalError[] reportedError = new IDDigitalError[1];
 
-        IDDigitalSDKJavaWrapper.isAssociated(
+        IDDigitalClientJavaWrapper.isAssociated(
                 error -> reportedError[0] = error,
                 value -> {
                     throw new AssertionError("No result is expected before initialization");
@@ -36,11 +36,11 @@ public class IDDigitalSDKJavaWrapperTest {
 
     @Test
     public void exposesCurrentJavaContract() throws Exception {
-        Class<IDDigitalSDKJavaWrapper> wrapper = IDDigitalSDKJavaWrapper.class;
-        Class<IDDigitalSDKJavaWrapper.OnErrorListener> error =
-                IDDigitalSDKJavaWrapper.OnErrorListener.class;
-        Class<IDDigitalSDKJavaWrapper.OnNullableStringResultListener> nullableString =
-                IDDigitalSDKJavaWrapper.OnNullableStringResultListener.class;
+        Class<IDDigitalClientJavaWrapper> wrapper = IDDigitalClientJavaWrapper.class;
+        Class<IDDigitalClientJavaWrapper.OnErrorListener> error =
+                IDDigitalClientJavaWrapper.OnErrorListener.class;
+        Class<IDDigitalClientJavaWrapper.OnNullableStringResultListener> nullableString =
+                IDDigitalClientJavaWrapper.OnNullableStringResultListener.class;
 
         wrapper.getMethod("parseAuthenticationLink", Uri.class);
         wrapper.getMethod(
@@ -48,7 +48,7 @@ public class IDDigitalSDKJavaWrapperTest {
                 Context.class,
                 String.class,
                 error,
-                IDDigitalSDKJavaWrapper.OnAssociationCompletedListener.class
+                IDDigitalClientJavaWrapper.OnAssociationCompletedListener.class
         );
         wrapper.getMethod(
                 "associateViaQrScan",
@@ -74,7 +74,7 @@ public class IDDigitalSDKJavaWrapperTest {
                 "startActiveTransactionPolling",
                 long.class,
                 error,
-                IDDigitalSDKJavaWrapper.OnTransactionDetectedListener.class
+                IDDigitalClientJavaWrapper.OnTransactionDetectedListener.class
         );
         wrapper.getMethod("stopActiveTransactionPolling", error);
     }

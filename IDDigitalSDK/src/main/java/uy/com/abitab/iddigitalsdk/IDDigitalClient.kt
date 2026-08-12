@@ -41,7 +41,7 @@ import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
  * su ciclo de vida. Los métodos que presentan un desafío abren interfaces propias de la SDK y
  * comunican el resultado mediante callbacks.
  */
-class IDDigitalSDK private constructor() {
+class IDDigitalClient private constructor() {
     private var removeAssociationUseCase: RemoveAssociationUseCase
     private var pinDataStoreManager: PinDataStoreManager
     private var createValidationSessionUseCase: CreateValidationSessionUseCase
@@ -61,7 +61,7 @@ class IDDigitalSDK private constructor() {
 
     /** Crea y conserva la instancia compartida de la SDK. */
     companion object {
-        private var instance: IDDigitalSDK? = null
+        private var instance: IDDigitalClient? = null
         private var isKoinStarted = false
         private lateinit var applicationContext: Context
         private lateinit var koinInstance: Koin
@@ -80,7 +80,7 @@ class IDDigitalSDK private constructor() {
          * @param onCompleted se invoca cuando la SDK queda lista para operar.
          * @param baseUrl URL base alternativa reservada para desarrollo interno y pruebas. En
          * una integración normal debe permanecer en `null`.
-         * @return la instancia compartida de [IDDigitalSDK].
+         * @return la instancia compartida de [IDDigitalClient].
          */
         fun initialize(
             context: Context,
@@ -89,7 +89,7 @@ class IDDigitalSDK private constructor() {
             onError: (IDDigitalError) -> Unit,
             onCompleted: (String) -> Unit,
             baseUrl: String? = null
-        ): IDDigitalSDK {
+        ): IDDigitalClient {
             if (instance == null) {
                 applicationContext = context.applicationContext
                 if (!isKoinStarted) {
@@ -111,7 +111,7 @@ class IDDigitalSDK private constructor() {
                     koinInstance = koinApp.koin
                     isKoinStarted = true
                 }
-                instance = IDDigitalSDK()
+                instance = IDDigitalClient()
 
                 CoroutineScope(Dispatchers.IO).launch {
                     try {

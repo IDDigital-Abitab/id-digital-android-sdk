@@ -152,7 +152,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
                             // Local storage still has a cached association (isAssociated()
                             // returned true), but the backend no longer recognizes its token
                             // (e.g. deactivated/removed on ID Digital's side). Reusing
-                            // DeviceNotAssociatedError here (see IDDigitalSDK.kt) lets callers
+                            // DeviceNotAssociatedError here (see IDDigitalClient.kt) lets callers
                             // clear the stale local association and retry as a fresh
                             // association instead of surfacing a generic unexpected error.
                             "invalid-device-association-token" -> DeviceNotAssociatedError()

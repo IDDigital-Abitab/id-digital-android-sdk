@@ -31,12 +31,12 @@ import com.example.iddigital.keycloak.KeycloakRedirectResult
 import com.example.iddigital.keycloak.buildIdDigitalResumeUri
 import com.example.iddigital.keycloak.parseIdDigitalCallback
 import com.example.iddigital.keycloak.parseKeycloakRedirect
-import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.IDDigitalClient
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
 class MainActivity : ComponentActivity() {
-    private lateinit var sdkInstance: IDDigitalSDK
+    private lateinit var sdkInstance: IDDigitalClient
     private var keycloakRedirect = mutableStateOf<KeycloakRedirectResult?>(null)
 
     private val notificationPermissionRequest =
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
         val apiKey = BuildConfig.API_KEY
         try {
-            sdkInstance = IDDigitalSDK.initialize(
+            sdkInstance = IDDigitalClient.initialize(
                 this,
                 apiKey,
                 environment = IDDigitalSDKEnvironment.valueOf(BuildConfig.SDK_ENVIRONMENT),
@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen(
-    sdkInstance: IDDigitalSDK,
+    sdkInstance: IDDigitalClient,
     keycloakRedirect: KeycloakRedirectResult? = null,
     incomingPush: PushPayload? = null,
     incomingDeepLink: DeepLinkPayload? = null,

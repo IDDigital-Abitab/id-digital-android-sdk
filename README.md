@@ -2,6 +2,23 @@
 
 SDK nativa de ID Digital para aplicaciones Android.
 
+## Requisitos de Instalación
+
+- **minSdk:** 26 (Android 8.0) o superior.
+- **Java 8+ API desugaring:** El SDK requiere habilitar `coreLibraryDesugaring` en el archivo `build.gradle.kts` de la aplicación integradora debido al uso de APIs modernas de Java (ej. `java.time` dentro de los módulos de AWS).
+
+```kotlin
+android {
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("uy.com.abitab:iddigitalsdk:1.0.5")
+}
+```
+
 ## Documentación
 
 La [guía de integración](../.docs/sdk/cliente/README.md) explica los flujos de
