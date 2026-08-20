@@ -48,7 +48,7 @@ import com.example.iddigital.deeplink.DeepLinkPayload
 import com.example.iddigital.fcm.PushPayload
 import com.example.iddigital.keycloak.KeycloakRedirectResult
 import com.google.firebase.messaging.FirebaseMessaging
-import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.IDDigitalClient
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
@@ -56,7 +56,7 @@ import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Examples(
-    sdkInstance: IDDigitalSDK,
+    sdkInstance: IDDigitalClient,
     onError: (IDDigitalError) -> Unit,
     keycloakRedirect: KeycloakRedirectResult? = null,
     incomingPush: PushPayload? = null,
@@ -224,7 +224,7 @@ fun CopyFcmTokenButton() {
 
 @Composable
 fun AssociateDevice(
-    sdkInstance: IDDigitalSDK,
+    sdkInstance: IDDigitalClient,
     transactionId: String,
     onCompleted: (idToken: String, validationSessionId: String) -> Unit,
 ) {
@@ -268,7 +268,7 @@ fun AssociateDevice(
  * completeTransaction(); onCompleted(finishUrl) es solo informativo, nunca se abre.
  */
 @Composable
-fun AssociateViaQrScan(sdkInstance: IDDigitalSDK) {
+fun AssociateViaQrScan(sdkInstance: IDDigitalClient) {
     val context = LocalContext.current
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
 
@@ -303,7 +303,7 @@ fun AssociateViaQrScan(sdkInstance: IDDigitalSDK) {
  * asociación local ya identifica al citizen.
  */
 @Composable
-fun ValidateViaQrScan(sdkInstance: IDDigitalSDK, challengeType: ChallengeType) {
+fun ValidateViaQrScan(sdkInstance: IDDigitalClient, challengeType: ChallengeType) {
     val context = LocalContext.current
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
 
@@ -332,7 +332,7 @@ fun ValidateViaQrScan(sdkInstance: IDDigitalSDK, challengeType: ChallengeType) {
 }
 
 @Composable
-fun CheckAssociation(sdkInstance: IDDigitalSDK) {
+fun CheckAssociation(sdkInstance: IDDigitalClient) {
     var associationValue by remember { mutableStateOf<Boolean?>(null) }
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
     val context = LocalContext.current
@@ -354,7 +354,7 @@ fun CheckAssociation(sdkInstance: IDDigitalSDK) {
 }
 
 @Composable
-fun RemoveAssociation(sdkInstance: IDDigitalSDK) {
+fun RemoveAssociation(sdkInstance: IDDigitalClient) {
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
     val context = LocalContext.current
 
@@ -373,7 +373,7 @@ fun RemoveAssociation(sdkInstance: IDDigitalSDK) {
 }
 
 @Composable
-fun CompleteTransaction(sdkInstance: IDDigitalSDK) {
+fun CompleteTransaction(sdkInstance: IDDigitalClient) {
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
     val context = LocalContext.current
 
@@ -423,7 +423,7 @@ fun CompleteTransaction(sdkInstance: IDDigitalSDK) {
 }
 
 @Composable
-fun CreateValidationSession(sdkInstance: IDDigitalSDK, challengeType: ChallengeType) {
+fun CreateValidationSession(sdkInstance: IDDigitalClient, challengeType: ChallengeType) {
     val coroutineScope = remember { CoroutineScope(Dispatchers.Main) }
     val context = LocalContext.current
 

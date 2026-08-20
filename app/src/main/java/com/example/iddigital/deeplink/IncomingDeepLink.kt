@@ -2,7 +2,7 @@ package com.example.iddigital.deeplink
 
 import android.content.Intent
 import androidx.compose.runtime.mutableStateOf
-import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.IDDigitalClient
 
 /**
  * Deep link same-device del puente web (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md).
@@ -23,6 +23,6 @@ object IncomingDeepLink {
 /** Usa el helper de la SDK para extraer transactionId; null si el intent no es este deep link. */
 fun deepLinkPayloadFromIntent(intent: Intent?): DeepLinkPayload? {
     val uri = intent?.data ?: return null
-    val transactionId = IDDigitalSDK.parseAuthenticationLink(uri) ?: return null
+    val transactionId = IDDigitalClient.parseAuthenticationLink(uri) ?: return null
     return DeepLinkPayload(transactionId)
 }

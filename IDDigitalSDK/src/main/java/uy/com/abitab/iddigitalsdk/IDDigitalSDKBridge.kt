@@ -14,14 +14,14 @@ import uy.com.abitab.iddigitalsdk.utils.NotInitializedError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
 /**
- * Entrada Java a las capacidades públicas de [IDDigitalSDK].
+ * Entrada Java a las capacidades públicas de [IDDigitalClient].
  *
  * Los métodos suspendidos de la API Kotlin se ejecutan en un scope de IO y entregan sus
  * resultados mediante listeners compatibles con Java.
  */
-object IDDigitalSDKJavaWrapper {
+object IDDigitalClientJavaWrapper {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var sdk: IDDigitalSDK? = null
+    private var sdk: IDDigitalClient? = null
 
     /** Recibe errores controlados de la SDK. */
     @FunctionalInterface
@@ -98,7 +98,7 @@ object IDDigitalSDKJavaWrapper {
         baseUrl: String? = null
     ) {
         try {
-            sdk = IDDigitalSDK.initialize(
+            sdk = IDDigitalClient.initialize(
                 context,
                 apiKey,
                 environment,
@@ -118,7 +118,7 @@ object IDDigitalSDKJavaWrapper {
      * @return identificador de transacción, o `null` si la URI no lo contiene.
      */
     @JvmStatic
-    fun parseAuthenticationLink(uri: Uri): String? = IDDigitalSDK.parseAuthenticationLink(uri)
+    fun parseAuthenticationLink(uri: Uri): String? = IDDigitalClient.parseAuthenticationLink(uri)
 
     /**
      * Asocia el dispositivo con el ciudadano de una transacción.
@@ -344,7 +344,7 @@ object IDDigitalSDKJavaWrapper {
         initializedSdk.stopActiveTransactionPolling()
     }
 
-    private fun sdkOrReport(onError: OnErrorListener?): IDDigitalSDK? {
+    private fun sdkOrReport(onError: OnErrorListener?): IDDigitalClient? {
         val initializedSdk = sdk
         if (initializedSdk == null) {
             onError?.onError(NotInitializedError())

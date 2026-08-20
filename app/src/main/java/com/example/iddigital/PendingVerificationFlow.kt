@@ -42,7 +42,7 @@ import com.example.iddigital.keycloak.KeycloakRedirectResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import uy.com.abitab.iddigitalsdk.IDDigitalSDK
+import uy.com.abitab.iddigitalsdk.IDDigitalClient
 import uy.com.abitab.iddigitalsdk.domain.models.ChallengeType
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
@@ -138,7 +138,7 @@ private fun KeycloakLoginSection(keycloakRedirect: KeycloakRedirectResult?) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PendingVerificationFlow(
-    sdkInstance: IDDigitalSDK,
+    sdkInstance: IDDigitalClient,
     keycloakRedirect: KeycloakRedirectResult?,
     onError: (IDDigitalError) -> Unit,
     incomingPush: PushPayload? = null,
