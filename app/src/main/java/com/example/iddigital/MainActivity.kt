@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -35,6 +36,8 @@ import uy.com.abitab.iddigitalsdk.IDDigitalClient
 import uy.com.abitab.iddigitalsdk.domain.models.IDDigitalSDKEnvironment
 import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
 
+const val SDK_LOG_TAG = "IDDigitalSample"
+
 class MainActivity : ComponentActivity() {
     private lateinit var sdkInstance: IDDigitalClient
     private var keycloakRedirect = mutableStateOf<KeycloakRedirectResult?>(null)
@@ -54,8 +57,16 @@ class MainActivity : ComponentActivity() {
                 this,
                 apiKey,
                 environment = IDDigitalSDKEnvironment.valueOf(BuildConfig.SDK_ENVIRONMENT),
-                onError = {},
-                onCompleted = {},
+                // El SDK invoca este callback desde Dispatchers.IO, de ahi el runOnUiThread.
+                onError = { error ->
+                    Log.e(SDK_LOG_TAG, "SDK init failed: ${error.message}", error)
+                    runOnUiThread {
+                        Toast.makeText(
+                            this, "SDK init: ${error.message}", Toast.LENGTH_LONG
+                        ).show()
+                    }
+                },
+                onCompleted = { Log.i(SDK_LOG_TAG, it) },
                 baseUrl = BuildConfig.API_BASE_URL.ifBlank { null },
             )
 
@@ -67,10 +78,10 @@ class MainActivity : ComponentActivity() {
                     incomingDeepLink = IncomingDeepLink.current.value,
                 )
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            Log.e(SDK_LOG_TAG, "Error initializing IDDigitalSDK: ${e.message}", e)
             Toast.makeText(this, "Error initializing IDDigitalSDK: ${e.message}", Toast.LENGTH_LONG)
                 .show()
-            e.printStackTrace()
         }
     }
 
@@ -132,7 +143,8 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     fun handleIDDigitalSdkError(error: IDDigitalError) {
-        Toast.makeText(context, error.message, Toast.LENGTH_SHORT).show()
+        Log.e(SDK_LOG_TAG, "SDK error: ${error.message}", error.cause ?: error)
+        Toast.makeText(context, error.message, Toast.LENGTH_LONG).show()
     }
 
     MaterialTheme {

@@ -12,8 +12,8 @@ import android.util.Base64
 /**
  * Dispara el tramo Keycloak del Patron B (puente web): abre el `authorize` endpoint
  * del realm configurado (broker hacia ID Digital) en un navegador in-app, para que el
- * backend de ID Digital cree la TransactionOIDC pendiente que despues se resuelve a mano
- * con el flujo guiado (ver PendingVerificationFlow).
+ * backend de ID Digital cree la TransactionOIDC pendiente, que despues se resuelve por
+ * push, deep link o el fallback QR (ver PendingVerificationFlow).
  *
  * La app no hace exchange de tokens: solo dispara el login y confirma el retorno via
  * deep link, ver KeycloakRedirect / MainActivity.onNewIntent.

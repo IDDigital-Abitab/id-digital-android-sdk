@@ -2,7 +2,7 @@
 
 Esta app demuestra el Patrón B (puente web) descrito en [`.docs/sdk/cliente/`](../../.docs/sdk/cliente/README.md) y en [`.docs/sdk/primera-asociacion-app-integradora.md`](../../.docs/sdk/primera-asociacion-app-integradora.md) §2.2: login Keycloak → aviso de verificación pendiente → la SDK resuelve asociación o validación → `completeTransaction()` cierra el login.
 
-Tiene Firebase Cloud Messaging configurado (proyecto propio, dedicado a esta app de ejemplo — simula la infraestructura FCM propia de un Integrador, separada de la del backend/app real de ID Digital). El aviso que en producción llegaría por push (`transactionId`, `type`, `documentNumber`, ver [`03-endpoint-push.md`](../../.docs/sdk/cliente/03-endpoint-push.md)) llega como un push real y la app resuelve sola la asociación/validación y completa la transacción — ver [`fcm/IDDigitalSampleFcmService.kt`](src/main/java/com/example/iddigital/fcm/IDDigitalSampleFcmService.kt). También se puede seguir completando a mano en la pantalla "Resolver verificación pendiente" para probar sin depender de FCM.
+Tiene Firebase Cloud Messaging configurado (proyecto propio, dedicado a esta app de ejemplo — simula la infraestructura FCM propia de un Integrador, separada de la del backend/app real de ID Digital). El aviso que en producción llegaría por push (`transactionId`, `type`, `documentNumber`, ver [`03-endpoint-push.md`](../../.docs/sdk/cliente/03-endpoint-push.md)) llega como un push real y la app resuelve sola la asociación/validación y completa la transacción — ver [`fcm/IDDigitalSampleFcmService.kt`](src/main/java/com/example/iddigital/fcm/IDDigitalSampleFcmService.kt).
 
 ## Configuración previa
 
@@ -30,12 +30,12 @@ Al cambiar manualmente de `STAGING` a `PRODUCTION` con el mismo `applicationId`,
 
 Requiere que el backend de `id-2.0-backend` tenga configurado el mock BQM con Firebase (ver [`.docs/sdk/mock-bqm-push-auth.md`](../../.docs/sdk/mock-bqm-push-auth.md)):
 
-1. **Copiar el token FCM**: abrir la app, ir a "Herramientas / debug" y tocar "Copiar token FCM". Pegarlo en `SDK_MOCK_BQM_FCM_TEST_DEVICE_TOKEN` del entorno del backend (y confirmar que existe `service-account-mock-bqm.json`) y reiniciar el backend.
+1. **Token FCM**: obtener el token FCM de este dispositivo (logcat / `FirebaseMessaging.getInstance().token`) y pegarlo en `SDK_MOCK_BQM_FCM_TEST_DEVICE_TOKEN` del entorno del backend (y confirmar que existe `service-account-mock-bqm.json`) y reiniciar el backend.
 2. **Iniciar sesión con Keycloak**: tocar el botón correspondiente. Se abre un Custom Tab con el login del realm configurado, que redirige al broker de ID Digital y crea la transacción pendiente.
-3. **Esperar la notificación**: el backend llama al mock BQM, que envía un push real con `transactionId`/`type`/`documentNumber`. Al recibirlo, la app completa sola los campos de "Resolver verificación pendiente" y dispara automáticamente `associate()`/`createValidationSession()` seguido de `completeTransaction()`. El estado de cada paso se muestra en la lista debajo del botón "Resolver".
+3. **Esperar la notificación**: el backend llama al mock BQM, que envía un push real con `transactionId`/`type`/`documentNumber`. Al tocarla, la app dispara automáticamente `associate()`/`createValidationSession()` seguido de `completeTransaction()`.
 4. El navegador (todavía en la pantalla de espera) debería reflejar el login como autorizado en el siguiente polling.
 
-Firebase (`SDK_MOCK_BQM_FCM_TEST_DEVICE_TOKEN` + `service-account-mock-bqm.json`) es un requisito del mock BQM, no un fallback opcional: si falta cualquiera de los dos, el push no llega y la transacción se queda esperando (ver [`.docs/sdk/mock-bqm-push-auth.md`](../../.docs/sdk/mock-bqm-push-auth.md)). Para probar sin depender del push, se puede seguir completando "Resolver verificación pendiente" a mano, copiando `transactionId` desde la URL `.../transaction-status/<transactionId>` que el navegador muestra tras el login.
+Firebase (`SDK_MOCK_BQM_FCM_TEST_DEVICE_TOKEN` + `service-account-mock-bqm.json`) es un requisito del mock BQM, no un fallback opcional: si falta cualquiera de los dos, el push no llega y la transacción se queda esperando (ver [`.docs/sdk/mock-bqm-push-auth.md`](../../.docs/sdk/mock-bqm-push-auth.md)). Sin push, usar el **fallback QR** de la sección de abajo (o el deep link same-device si el SPA lo dispara).
 
 ## Cómo probar el fallback QR cross-device
 
@@ -43,9 +43,9 @@ Ver [`01-arquitectura-y-flujos.md`](../../.docs/sdk/cliente/01-arquitectura-y-fl
 
 1. En Django Admin → SDK → Clients, apuntar temporalmente `push_endpoint_url` del `sdk.Client` de prueba a una URL que devuelva `404` (o dejarlo vacío/inválido para que se agoten los reintentos) — cualquiera de los dos casos deja la transacción `IN_PROGRESS` con `sdk_push_failed=true` en vez de fallarla.
 2. **Iniciar sesión con Keycloak** desde un navegador (puede ser en la laptop, para probar el caso cross-device real). El backend crea la transacción pendiente y, al no poder confirmar la push, la pantalla de espera muestra el QR en el siguiente polling.
-3. En el teléfono (dispositivo físico, requiere cámara), abrir esta app de ejemplo. La sección **"Fallback QR cross-device"** (debajo de "Resolver verificación pendiente", pero independiente de ella — no usa `transactionId` ni depende de que haya llegado una push) enruta sola según si el dispositivo ya tiene una asociación local:
-   - **Sin asociación local:** muestra el botón **"Escanear QR (asociación)"**. Alternativamente, "Asociar vía QR" en "Herramientas / debug" hace lo mismo. No requiere ingresar un documento.
-   - **Con asociación local:** muestra un picker Pin/Liveness y el botón **"Escanear QR (validación)"**. Alternativamente, "Validar Pin/Liveness vía QR" en "Herramientas / debug" hace lo mismo.
+3. En el teléfono (dispositivo físico, requiere cámara), abrir esta app de ejemplo. La sección **"Fallback QR cross-device"** enruta sola según si el dispositivo ya tiene una asociación local:
+   - **Sin asociación local:** muestra el botón **"Escanear QR (asociación)"**. No requiere ingresar un documento.
+   - **Con asociación local:** muestra un picker Pin/Liveness y el botón **"Escanear QR (validación)"**.
 4. Tocar el botón correspondiente y apuntar la cámara al QR mostrado en el navegador. La SDK decodifica el token, corre Liveness/PIN, y cierra la transacción internamente — no hace falta llamar `completeTransaction()` por separado.
 5. El navegador (todavía en la pantalla de espera) debería reflejar el login como autorizado en el siguiente polling; el `finishUrl` que recibe la app es solo informativo y nunca se abre ahí, porque este camino es siempre cross-device.
 
@@ -53,9 +53,14 @@ Para probar específicamente el camino de **validación** (paso 3, con asociaci�
 
 **Por qué no pide un documento:** desde v3.0.0, `associateViaQrScan()` obtiene el token desde el QR y el backend resuelve al citizen desde la transacción asociada. La app no construye ni envía un `Document` (ver [`04-integracion-sdk.md`](../../.docs/sdk/cliente/04-integracion-sdk.md)). En el camino de validación, la asociación local identifica al citizen.
 
-## Sección "Herramientas / debug"
+## Sección "Asociación"
 
-Debajo del flujo guiado quedan los métodos de la SDK expuestos de forma aislada (`associate`, `associateViaQrScan`, `validateViaQrScan`, `isAssociated`, `removeAssociation`, `createValidationSession` y un `completeTransaction` manual), útiles para probar cada uno por separado sin pasar por Keycloak, más el botón para copiar el token FCM del dispositivo.
+Al final de la pantalla quedan dos controles:
+
+- **"Existe asociación?"** (`isAssociated()`) consulta **solo el estado local** del dispositivo, no el backend.
+- **"Eliminar"** (`removeAssociation()`) borra **las dos puntas**: hace `DELETE associations/` contra el backend y después limpia la asociación local y el PIN/biometría guardados. Útil para repetir la primera asociación sin reinstalar la app, y deja el fallback QR de vuelta en el camino de asociación.
+
+El SDK se traga el error del `DELETE` (solo `Log.e`) y limpia lo local igual. Si esa llamada falla, el dispositivo queda sin asociación local mientras el backend conserva la `DeviceAssociation`; en ese caso, eliminarla desde Django Admin → SDK → Device associations.
 
 ## Fuera de alcance de esta app
 

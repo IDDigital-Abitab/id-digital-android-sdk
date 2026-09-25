@@ -4,11 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -17,14 +15,15 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.iddigital.deeplink.DeepLinkPayload
 import com.example.iddigital.fcm.PushPayload
 import com.example.iddigital.keycloak.KeycloakAuth
@@ -52,9 +54,9 @@ import uy.com.abitab.iddigitalsdk.utils.IDDigitalError
  * llega con el tipo ya resuelto por el backend del integrador; el deep link solo trae
  * transactionId, así que el tipo se decide localmente con sdkInstance.isAssociated().
  */
-private enum class PendingVerificationType(val label: String) {
-    Association("Asociación"),
-    Validation("Validación"),
+private enum class PendingVerificationType {
+    Association,
+    Validation,
 }
 
 private sealed class StepState {
@@ -66,8 +68,8 @@ private sealed class StepState {
 
 /**
  * Login Keycloak del Patron B: abre el authorize del realm configurado en un Custom Tab.
- * El backend de ID Digital crea ahi la TransactionOIDC pendiente; su id se copia a mano
- * (no hay push real todavia) en el flujo guiado de abajo.
+ * El backend de ID Digital crea ahi la TransactionOIDC pendiente; el transactionId llega
+ * por push o deep link (LaunchedEffect mas abajo) o se resuelve con el fallback QR.
  */
 @Composable
 private fun KeycloakLoginSection(keycloakRedirect: KeycloakRedirectResult?) {
@@ -78,7 +80,7 @@ private fun KeycloakLoginSection(keycloakRedirect: KeycloakRedirectResult?) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "Abre el login de Keycloak. El backend de ID Digital va a crear ahí la " +
-                "transacción pendiente; copiá su id manualmente en el flujo de abajo.",
+                "transacción pendiente; esta app la resuelve por push, deep link o el QR de abajo.",
             style = MaterialTheme.typography.bodySmall,
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -124,16 +126,15 @@ private fun KeycloakLoginSection(keycloakRedirect: KeycloakRedirectResult?) {
 }
 
 /**
- * Flujo guiado que reemplaza los botones sueltos anteriores para el tramo "puente web":
- * recibe el transactionId/type que en producción llegan por push (ver
- * .docs/sdk/cliente/03-endpoint-push.md) — automáticamente si llega un [incomingPush]
- * (ver IDDigitalSampleFcmService) o un [incomingDeepLink] same-device (ver
- * .docs/sdk/cliente/01-arquitectura-y-flujos.md), o a mano si se completa el campo sin
- * push — y orquesta asociación o validación seguida de completeTransaction(), igual que el
- * código de referencia de .docs/sdk/cliente/04-integracion-sdk.md. El backend resuelve al
- * ciudadano desde esta transacción, así que no hace falta ningún dato de documento acá.
- * Al completar, si el backend devolvió finishUrl, lo abre con el abridor de URLs del
- * sistema en vez de depender del polling del browser en background.
+ * Flujo guiado del tramo "puente web": recibe el transactionId/type que en producción
+ * llegan por push (ver .docs/sdk/cliente/03-endpoint-push.md) — automáticamente si llega
+ * un [incomingPush] (ver IDDigitalSampleFcmService) o un [incomingDeepLink] same-device
+ * (ver .docs/sdk/cliente/01-arquitectura-y-flujos.md) — y orquesta asociación o validación
+ * seguida de completeTransaction(), igual que el código de referencia de
+ * .docs/sdk/cliente/04-integracion-sdk.md. El backend resuelve al ciudadano desde esta
+ * transacción, así que no hace falta ningún dato de documento acá. Al completar, si el
+ * backend devolvió finishUrl, lo abre con el abridor de URLs del sistema en vez de
+ * depender del polling del browser en background.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,7 +169,6 @@ fun PendingVerificationFlow(
 
     val isRunning = resolveStepState is StepState.Running || completeStepState is StepState.Running ||
         qrStepState is StepState.Running
-    val canSubmit = transactionId.isNotBlank() && !isRunning
     val canScanQr = !isRunning
 
     fun completeTransaction(validationSessionId: String, openFinishUrl: Boolean) {
@@ -184,8 +184,8 @@ fun PendingVerificationFlow(
                 onSuccess = { finishUrl ->
                     completeStepState = StepState.Done
                     Toast.makeText(context, "Transacción completada", Toast.LENGTH_SHORT).show()
-                    // Solo same-device (deep link o esta prueba manual, ver openFinishUrl en
-                    // los callers): abrimos finishUrl nosotros en vez de depender del tab del
+                    // Solo same-device (deep link, ver openFinishUrl en los callers):
+                    // abrimos finishUrl nosotros en vez de depender del tab del
                     // browser, ver .docs/sdk/cliente/01-arquitectura-y-flujos.md. Un push real
                     // puede ser cross-device - ahí el browser original es el único que tiene
                     // la cookie de sesión correcta para login-actions/authenticate en Keycloak,
@@ -226,6 +226,7 @@ fun PendingVerificationFlow(
                             }
                         )
                     } catch (e: Throwable) {
+                        Log.e(SDK_LOG_TAG, "associate() failed: ${e.message}", e)
                         resolveStepState = StepState.Failed(e.message ?: "Error al asociar dispositivo")
                     }
                 }
@@ -275,6 +276,7 @@ fun PendingVerificationFlow(
                     }
                 )
             } catch (e: Throwable) {
+                Log.e(SDK_LOG_TAG, "associateViaQrScan() failed: ${e.message}", e)
                 qrStepState = StepState.Failed(e.message ?: "Error al escanear QR")
             }
         }
@@ -301,14 +303,39 @@ fun PendingVerificationFlow(
                     }
                 )
             } catch (e: Throwable) {
+                Log.e(SDK_LOG_TAG, "validateViaQrScan() failed: ${e.message}", e)
                 qrStepState = StepState.Failed(e.message ?: "Error al escanear QR")
             }
         }
     }
 
+    fun checkAssociation() {
+        coroutineScope.launch {
+            refreshDeviceAssociation()
+            Toast.makeText(
+                context,
+                if (isDeviceAssociated) "Usuario ya se encuentra asociado" else "No existe usuario asociado",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
+    // removeAssociation() borra las dos puntas: hace DELETE associations/ contra el backend
+    // y despues limpia la asociacion local y el PIN/biometria (ver IDDigitalClient). Ojo: el
+    // SDK se traga el error del DELETE (solo Log.e) y limpia lo local igual, asi que si la
+    // llamada falla el dispositivo queda sin asociacion local pero el backend la conserva.
+    // Refresca isDeviceAssociated para que el fallback QR vuelva al camino de asociacion.
+    fun removeAssociation() {
+        coroutineScope.launch {
+            sdkInstance.removeAssociation()
+            refreshDeviceAssociation()
+            Toast.makeText(context, "Asociación eliminada", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Al llegar un push real (ver IDDigitalSampleFcmService), completa transactionId y
-    // dispara el mismo camino que el botón "Resolver" — sin necesidad de copiar/pegar nada a
-    // mano. El backend resuelve al citizen desde esta transacción (via
+    // resuelve la transacción sola, sin necesidad de copiar/pegar nada a mano. El backend
+    // resuelve al citizen desde esta transacción (via
     // resolve_transaction_pk), así que no hace falta ningún dato de documento acá -
     // documentNumber/Type/Country del payload solo le sirven al backend del Integrador para
     // decidir a qué dispositivo notificar (.docs/sdk/cliente/03-endpoint-push.md), no a la
@@ -328,10 +355,16 @@ fun PendingVerificationFlow(
     }
 
     // Al llegar el deep link same-device (ver MainActivity.handleIntent), la app decide
-    // localmente si el paso pendiente es asociación o validación, y dispara "Resolver" de
-    // una - el transactionId del deep link (ver IncomingDeepLink.kt) alcanza para ambos
-    // casos, sin necesitar ningún dato de documento. openFinishUrl=true: este trigger es
-    // same-device por construcción.
+    // localmente si el paso pendiente es asociación o validación, y resuelve de una - el
+    // transactionId del deep link (ver IncomingDeepLink.kt) alcanza para ambos
+    // casos, sin necesitar ningún dato de documento.
+    //
+    // Workaround de prueba (NO es el criterio de IDAPP-1002/1004): openFinishUrl=false.
+    // Hoy el backend genera un authorization code tanto en complete_oidc_transaction
+    // (cuando la app llama completeTransaction) como en cada poll de la SPA
+    // (complete_transaction). Keycloak consume el primero y rechaza el segundo.
+    // Hasta que el backend no deje de emitir finishUrl a la SPA en same-device,
+    // redirige solo la SPA. Ver FIXES.md § Backend.
     LaunchedEffect(incomingDeepLink) {
         val link = incomingDeepLink ?: return@LaunchedEffect
         transactionId = link.transactionId
@@ -341,109 +374,30 @@ fun PendingVerificationFlow(
         } else {
             PendingVerificationType.Association
         }
-        resolveAndComplete(openFinishUrl = true)
+        resolveAndComplete(openFinishUrl = false)
     }
 
-    LaunchedEffect(Unit) {
-        refreshDeviceAssociation()
+    // Los pasos que abren una pantalla de la SDK quedan en Running si el ciudadano abandona
+    // el flujo, porque la SDK solo invoca los callbacks al completar o al fallar. Al volver
+    // al foreground, un Running que sobrevivió significa flujo abandonado: se descarta para
+    // no dejar la pantalla entera deshabilitada. Un flujo que terminó bien ya pasó a
+    // Done/Failed, así que no se toca.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (resolveStepState is StepState.Running) resolveStepState = StepState.Idle
+                if (qrStepState is StepState.Running) qrStepState = StepState.Idle
+                coroutineScope.launch { refreshDeviceAssociation() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         KeycloakLoginSection(keycloakRedirect)
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text("Resolver verificación pendiente", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            "Estos campos se completan solos al llegar el push cross-device real " +
-                "(ver README de este módulo). También se pueden completar a mano para " +
-                "probar sin depender de FCM.",
-            style = MaterialTheme.typography.bodySmall,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextField(
-            value = transactionId,
-            onValueChange = { transactionId = it },
-            label = { Text("transactionId") },
-            enabled = !isRunning,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row {
-            FilterChip(
-                selected = pendingType == PendingVerificationType.Association,
-                onClick = { pendingType = PendingVerificationType.Association },
-                enabled = !isRunning,
-                label = { Text(PendingVerificationType.Association.label) },
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            FilterChip(
-                selected = pendingType == PendingVerificationType.Validation,
-                onClick = { pendingType = PendingVerificationType.Validation },
-                enabled = !isRunning,
-                label = { Text(PendingVerificationType.Validation.label) },
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-
-        when (pendingType) {
-            PendingVerificationType.Association -> {
-                Text(
-                    "El backend resuelve al ciudadano desde el transactionId (no hace " +
-                        "falta ningún dato de documento acá).",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-
-            PendingVerificationType.Validation -> {
-                Row {
-                    FilterChip(
-                        selected = challengeType == ChallengeType.Pin,
-                        onClick = { challengeType = ChallengeType.Pin },
-                        enabled = !isRunning,
-                        label = { Text("Pin") },
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    FilterChip(
-                        selected = challengeType == ChallengeType.Liveness,
-                        onClick = { challengeType = ChallengeType.Liveness },
-                        enabled = !isRunning,
-                        label = { Text("Liveness") },
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        FilledTonalButton(
-            // openFinishUrl=true: este botón se usa para probar a mano el flujo same-device
-            // (ej. copiar el transactionId del botón "Id Digital" en el mismo dispositivo),
-            // no para simular un push cross-device real.
-            onClick = { resolveAndComplete(openFinishUrl = true) },
-            enabled = canSubmit,
-        ) {
-            Text("Resolver")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        val resolveLabel = if (pendingType == PendingVerificationType.Association) {
-            "Asociar dispositivo"
-        } else {
-            "Crear sesión de validación"
-        }
-        StepRow(label = resolveLabel, state = resolveStepState)
-        Spacer(modifier = Modifier.height(4.dp))
-        StepRow(label = "Completar transacción", state = completeStepState)
-
-        Spacer(modifier = Modifier.height(32.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-        ) {}
         Spacer(modifier = Modifier.height(32.dp))
 
         Text("Fallback QR cross-device", style = MaterialTheme.typography.headlineMedium)
@@ -507,6 +461,35 @@ fun PendingVerificationFlow(
             }
             Spacer(modifier = Modifier.height(8.dp))
             StepRow(label = "Escanear QR, asociar y completar transacción", state = qrStepState)
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text("Asociación", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            "\"Existe asociación?\" consulta solo el estado local del dispositivo. " +
+                "\"Eliminar\" borra las dos puntas: la DeviceAssociation del backend, la " +
+                "asociación local y el PIN/biometría guardados. Después de eliminar, el " +
+                "fallback QR de arriba vuelve al camino de asociación.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        FilledTonalButton(
+            onClick = { checkAssociation() },
+            enabled = !isRunning,
+        ) {
+            Text("Existe asociación?")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { removeAssociation() },
+            enabled = !isRunning,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.error
+            ),
+        ) {
+            Text("Eliminar", color = MaterialTheme.colorScheme.onError)
         }
     }
 }
