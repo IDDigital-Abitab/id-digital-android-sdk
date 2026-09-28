@@ -36,7 +36,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.iddigital"
+        applicationId = "uy.com.abitab.iddigital.sdk.sample"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

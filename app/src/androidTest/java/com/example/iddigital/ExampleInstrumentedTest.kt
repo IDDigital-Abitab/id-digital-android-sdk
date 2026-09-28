@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.iddigital", appContext.packageName)
+        assertEquals("uy.com.abitab.iddigital.sdk.sample", appContext.packageName)
     }
 }
