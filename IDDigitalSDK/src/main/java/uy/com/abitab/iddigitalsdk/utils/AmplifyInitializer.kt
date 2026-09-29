@@ -20,6 +20,18 @@ internal object AmplifyInitializer: AmplifyInitializerInterface, KoinComponent {
     override suspend fun initialize(context: Context) {
         val configData = configService.getConfiguration()
         try {
+            // Amplify convierte un AppClientId vacio en null pero igual construye el
+            // userPool, y despues lo desreferencia con !! (AWSCognitoAuthPlugin.configure).
+            // La prueba de vida solo usa las credenciales de invitado del identity pool, asi
+            // que omitimos el bloque entero cuando el backend no envia AppClientId.
+            val userPoolSection = if (configData.cognitoAppClientId.isBlank()) "" else """
+        "CognitoUserPool": {
+          "Default": {
+            "PoolId": "${configData.cognitoUserPoolId}",
+            "AppClientId": "${configData.cognitoAppClientId}",
+            "Region": "${configData.region}"
+          }
+        },"""
 
             val jsonString = """{
   "UserAgent": "aws-amplify-cli/2.0",
@@ -39,14 +51,7 @@ internal object AmplifyInitializer: AmplifyInitializerInterface, KoinComponent {
               "Region": "${configData.region}"
             }
           }
-        },
-        "CognitoUserPool": {
-          "Default": {
-            "PoolId": "${configData.cognitoUserPoolId}",
-            "AppClientId": "${configData.cognitoAppClientId}",
-            "Region": "${configData.region}"
-          }
-        },
+        },$userPoolSection
         "Auth": {
           "Default": {
             "authenticationFlowType": "USER_SRP_AUTH",
