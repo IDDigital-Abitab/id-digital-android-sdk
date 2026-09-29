@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1094238506966",
-    "project_id": "iddigital-sdk-sample",
-    "storage_bucket": "iddigital-sdk-sample.firebasestorage.app"
+    "project_number": "211269772391",
+    "project_id": "id-digital-sdk-ios",
+    "storage_bucket": "id-digital-sdk-ios.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1094238506966:android:f53b64c217336e88b51e77",
+        "mobilesdk_app_id": "1:211269772391:android:d7b532f3ff1ea92df6a0c2",
         "android_client_info": {
-          "package_name": "com.example.iddigital"
+          "package_name": "uy.com.abitab.iddigital.sdk.sample"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCD0wwLDYCSgYVWgIQNchZmb93NRKT8JdU"
+          "current_key": "AIzaSyDfuyybztSltmN6inXaZomynBgcM5lL2ts"
         }
       ],
       "services": {
