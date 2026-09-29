@@ -66,8 +66,8 @@ internal class DeviceAssociationViewModel(
                 deviceAssociationSession = session
                 currentChallengeIndex = 0
                 launchNextChallenge()
-            } catch (e: Exception) {
-                _uiState.emit(DeviceAssociationUiState.Error(UnknownError("Error starting association: ${e.message}")))
+            } catch (e: Throwable) {
+                _uiState.emit(DeviceAssociationUiState.Error(e.toIDDigitalError("Error starting association")))
             }
         }
     }
