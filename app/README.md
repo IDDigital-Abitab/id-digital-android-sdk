@@ -71,7 +71,7 @@ Desde la raíz de `id-digital-android-sdk`, en la rama `sample/min-stg-1.0.0-dev
 ./gradlew :app:assembleDebug
 ```
 
-El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. Usa el keystore de debug de la máquina (no el de release). `applicationId` es `uy.com.abitab.iddigital.sdk.sample` y `versionName` es `1.0.0` (`versionCode` 1). La APK que se subió a Drive el 3 de septiembre se renombró a mano a `id-digital-sample-1.0.0-dev-debug.apk`; Gradle no le pone ese nombre.
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. Usa el keystore de debug de la máquina (no el de release). `applicationId` es `uy.com.abitab.iddigital.sdk.sample` y `versionName` es `1.0.0-dev` (`versionCode` 1). La APK que se subió a Drive el 3 de septiembre se renombró a mano a `id-digital-sample-1.0.0-dev-debug.apk`; Gradle no le pone ese nombre.
 
 GitHub Actions no genera este APK. `release.yml` publica el AAR del SDK a un repo de distribución y hay que dispararlo a mano con una versión y una URL. `api-docs.yml` genera la documentación Dokka y solo corre en `main`.
 
