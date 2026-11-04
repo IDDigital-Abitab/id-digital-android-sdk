@@ -22,8 +22,10 @@ public class IDDigitalClientJavaWrapperTest {
 
     @Test
     public void reportsNotInitializedBeforeUsingSdk() {
+        // Given the SDK has not been initialized
         final IDDigitalError[] reportedError = new IDDigitalError[1];
 
+        // When a Java caller asks if the device is associated
         IDDigitalClientJavaWrapper.isAssociated(
                 error -> reportedError[0] = error,
                 value -> {
@@ -31,11 +33,13 @@ public class IDDigitalClientJavaWrapperTest {
                 }
         );
 
+        // Then the SDK reports that initialize() must be called first
         assertTrue(reportedError[0] instanceof NotInitializedError);
     }
 
     @Test
     public void exposesCurrentJavaContract() throws Exception {
+        // Given the Java entry point
         Class<IDDigitalClientJavaWrapper> wrapper = IDDigitalClientJavaWrapper.class;
         Class<IDDigitalClientJavaWrapper.OnErrorListener> error =
                 IDDigitalClientJavaWrapper.OnErrorListener.class;
@@ -77,5 +81,6 @@ public class IDDigitalClientJavaWrapperTest {
                 IDDigitalClientJavaWrapper.OnTransactionDetectedListener.class
         );
         wrapper.getMethod("stopActiveTransactionPolling", error);
+        // Then every public operation of the current contract is visible to Java callers.
     }
 }

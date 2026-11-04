@@ -18,10 +18,14 @@ import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 import java.time.Instant
 
-internal class PinService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class PinService(
+    private val httpClient: OkHttpClient,
+    private val context: Context,
+    private val isInternetAvailable: () -> Boolean = { NetworkUtils.isInternetAvailable(context) },
+) : BaseService() {
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -71,7 +75,7 @@ internal class PinService(private val httpClient: OkHttpClient, private val cont
 
     suspend fun executeChallenge(challengeId: String): Instant? =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -115,7 +119,7 @@ internal class PinService(private val httpClient: OkHttpClient, private val cont
 
     suspend fun validateChallenge(challengeId: String, pin: String): Boolean =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
