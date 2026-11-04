@@ -28,10 +28,14 @@ import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.ValidationSessionNotFoundError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-internal class ValidationSessionService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class ValidationSessionService(
+    private val httpClient: OkHttpClient,
+    private val context: Context,
+    private val isInternetAvailable: () -> Boolean = { NetworkUtils.isInternetAvailable(context) },
+) : BaseService() {
     suspend fun createDeviceAssociation(transactionId: String): ValidationSession =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -85,7 +89,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
 
     suspend fun completeDeviceAssociation(id: String): DeviceAssociation =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -125,7 +129,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
 
     suspend fun createValidationSession(challengeType: ChallengeType): ValidationSession =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -186,7 +190,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
 
     suspend fun completeTransaction(transactionId: String, validationSessionId: String): CompleteTransactionResult =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -271,7 +275,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
      */
     suspend fun getPendingTransactions(): List<PendingTransaction> =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -310,7 +314,7 @@ internal class ValidationSessionService(private val httpClient: OkHttpClient, pr
         }
 
     suspend fun removeAssociation(): Unit = withContext(Dispatchers.IO) {
-        if (!NetworkUtils.isInternetAvailable(context)) {
+        if (!isInternetAvailable()) {
             throw NoInternetConnection()
         }
         val request = Request.Builder().delete().url(buildUrl("associations/")).build()

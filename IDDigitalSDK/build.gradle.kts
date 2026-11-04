@@ -1,13 +1,23 @@
 import org.jetbrains.dokka.DokkaConfiguration
 import org.jetbrains.dokka.gradle.DokkaTask
 
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoReportBase
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.dokka)
+    jacoco
     `maven-publish`
     id("kotlin-parcelize")
     id("com.google.protobuf") version "0.9.4"
+}
+
+jacoco {
+    toolVersion = "0.8.12"
 }
 
 val sdkVersion = providers.gradleProperty("VERSION_NAME")
@@ -75,6 +85,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -82,6 +95,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        unitTests.isReturnDefaultValues = true
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
@@ -150,6 +167,11 @@ dependencies {
     implementation(libs.mlkit.barcode.scanning)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
@@ -172,5 +194,70 @@ protobuf {
 
             }
         }
+    }
+}
+
+private fun JacocoReportBase.configureSdkLogicCoverage() {
+    val included = listOf(
+        "uy/com/abitab/iddigitalsdk/data/network/**",
+        "uy/com/abitab/iddigitalsdk/domain/**",
+        "uy/com/abitab/iddigitalsdk/presentation/device_association/ui/viewmodels/**",
+        "uy/com/abitab/iddigitalsdk/presentation/validation_session/ui/viewmodels/**",
+    )
+    classDirectories.setFrom(
+        fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
+            include(included)
+        },
+        fileTree(layout.buildDirectory.dir("intermediates/javac/debug/compileDebugJavaWithJavac/classes")) {
+            include(included)
+        },
+    )
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include("outputs/unit_test_code_coverage/**/*.exec")
+            include("jacoco/*.exec")
+        }
+    )
+}
+
+val sdkCoverageReport = tasks.register<JacocoReport>("sdkCoverageReport") {
+    group = "verification"
+    description = "Line coverage of the SDK logic covered by IDAPP-606."
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    configureSdkLogicCoverage()
+}
+
+tasks.register<JacocoCoverageVerification>("sdkCoverageVerification") {
+    group = "verification"
+    description = "Fails when SDK logic line coverage drops below 70%."
+    dependsOn(sdkCoverageReport)
+    violationRules {
+        rule {
+            element = "BUNDLE"
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
+    configureSdkLogicCoverage()
+}
+
+tasks.named("check") {
+    dependsOn("sdkCoverageVerification")
+}
+
+// Robolectric loads SDK classes from its own class loader. Without this, JaCoCo
+// records those classes as uncovered even when the tests pass.
+tasks.withType<Test>().configureEach {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
     }
 }

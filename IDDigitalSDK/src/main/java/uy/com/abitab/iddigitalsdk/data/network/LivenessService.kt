@@ -15,10 +15,14 @@ import uy.com.abitab.iddigitalsdk.utils.ServiceUnavailableError
 import uy.com.abitab.iddigitalsdk.utils.UnexpectedResponseError
 import uy.com.abitab.iddigitalsdk.utils.toIDDigitalError
 
-internal class LivenessService(private val httpClient: OkHttpClient, private val context: Context): BaseService() {
+internal class LivenessService(
+    private val httpClient: OkHttpClient,
+    private val context: Context,
+    private val isInternetAvailable: () -> Boolean = { NetworkUtils.isInternetAvailable(context) },
+) : BaseService() {
     suspend fun createChallenge(document: Document): String =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -68,7 +72,7 @@ internal class LivenessService(private val httpClient: OkHttpClient, private val
 
     suspend fun executeChallenge(challengeId: String): String =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
@@ -110,7 +114,7 @@ internal class LivenessService(private val httpClient: OkHttpClient, private val
 
     suspend fun validateChallenge(challengeId: String): Boolean =
         withContext(Dispatchers.IO) {
-            if (!NetworkUtils.isInternetAvailable(context)) {
+            if (!isInternetAvailable()) {
                 throw NoInternetConnection()
             }
 
